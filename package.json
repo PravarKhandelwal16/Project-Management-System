@@ -1,0 +1,23 @@
+{
+  "name": "project-management-system",
+  "version": "1.0.0",
+  "description": "Full-stack Project Management System built with React, Vite, Node.js, Express, and MySQL.",
+  "scripts": {
+    "dev:server": "npm --prefix server run dev",
+    "dev:client": "npm --prefix client run dev",
+    "start:server": "npm --prefix server run start",
+    "build:client": "npm --prefix client run build",
+    "install:server": "npm --prefix server install",
+    "install:client": "npm --prefix client install",
+    "install:all": "npm install --prefix server && npm install --prefix client"
+  },
+  "keywords": [
+    "react",
+    "vite",
+    "express",
+    "mysql",
+    "project-management"
+  ],
+  "author": "",
+  "license": "ISC"
+}
