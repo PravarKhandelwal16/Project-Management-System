@@ -9,6 +9,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(require('./middleware/auditContext').middleware);
 
 // Root route
 app.get('/', (req, res) => {

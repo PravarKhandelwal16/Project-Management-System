@@ -43,7 +43,7 @@ export const AuthProvider = ({ children }) => {
     if (!currentToken) return null;
     try {
       const response = await getMeApi(currentToken);
-      if (response.success && response.user) {
+      if (response.success && response.user && localStorage.getItem(TOKEN_STORAGE_KEY) === currentToken) {
         setUser(response.user);
         return response.user;
       }
@@ -104,6 +104,14 @@ export const AuthProvider = ({ children }) => {
     };
   }, [logout]);
 
+  useEffect(() => {
+    if (!token) return;
+    const timer = setInterval(refreshUser, 30000);
+    const onFocus = () => refreshUser();
+    window.addEventListener('focus', onFocus);
+    return () => { clearInterval(timer); window.removeEventListener('focus', onFocus); };
+  }, [token, refreshUser]);
+
   /**
    * Handle user login
    */
@@ -146,8 +154,9 @@ export const AuthProvider = ({ children }) => {
   const isAdmin = role === 'admin';
   const isProjectManager = role === 'project_manager';
   const isMember = role === 'member';
-  const canCreateProject = isSuperAdmin || isAdmin || isProjectManager;
-  const canManageUsers = isSuperAdmin || isAdmin;
+  const hasPermission = permission => isSuperAdmin || user?.permissions?.includes(permission) === true;
+  const canCreateProject = hasPermission('projects.create');
+  const canManageUsers = hasPermission('users.view');
 
   const value = {
     user,
@@ -161,6 +170,7 @@ export const AuthProvider = ({ children }) => {
     isMember,
     canCreateProject,
     canManageUsers,
+    hasPermission,
     login,
     register,
     logout,

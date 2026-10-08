@@ -1,54 +1,17 @@
-const express = require('express');
-const router = express.Router();
-const authenticateToken = require('../middleware/authMiddleware');
-const { authorizeRoles } = require('../middleware/rbacMiddleware');
-const { ADMIN_ROLES } = require('../utils/roles');
-const adminController = require('../controllers/adminController');
-
-// All admin routes require authentication and Super Admin / Admin role
-router.use(authenticateToken);
-router.use(authorizeRoles(...ADMIN_ROLES));
-
-/**
- * @route   GET /api/admin/users
- * @desc    List users with search and filters
- * @access  Private (Super Admin, Admin)
- */
-router.get('/users', adminController.getUsers);
-
-/**
- * @route   GET /api/admin/users/:id
- * @desc    Get user profile details
- * @access  Private (Super Admin, Admin)
- */
-router.get('/users/:id', adminController.getUserById);
-
-/**
- * @route   PATCH /api/admin/users/:id/role
- * @desc    Update user role with privilege rules
- * @access  Private (Super Admin, Admin)
- */
-router.patch('/users/:id/role', adminController.updateUserRole);
-
-/**
- * @route   PATCH /api/admin/users/:id/status
- * @desc    Activate or deactivate user account
- * @access  Private (Super Admin, Admin)
- */
-router.patch('/users/:id/status', adminController.updateUserStatus);
-
-/**
- * @route   GET /api/admin/stats
- * @desc    Get system-wide overview statistics
- * @access  Private (Super Admin, Admin)
- */
-router.get('/stats', adminController.getSystemStats);
-
-/**
- * @route   GET /api/admin/audit-logs
- * @desc    Get audit logs
- * @access  Private (Super Admin, Admin)
- */
-router.get('/audit-logs', adminController.getAuditLogs);
-
+const router = require('express').Router();
+const authenticate = require('../middleware/authMiddleware');
+const { authorizeRoles, requirePermission } = require('../middleware/rbacMiddleware');
+const controller = require('../controllers/adminController');
+router.use(authenticate, authorizeRoles('super_admin', 'admin'));
+router.get('/roles', requirePermission('users.view'), controller.getRoles);
+router.put('/roles/:role', requirePermission('roles.manage'), controller.updateRolePolicy);
+router.get('/users', requirePermission('users.view'), controller.getUsers);
+router.post('/users', requirePermission('users.create'), controller.createUser);
+router.get('/users/:id', requirePermission('users.view'), controller.getUserById);
+router.put('/users/:id', requirePermission('users.edit'), controller.updateUser);
+router.patch('/users/:id/role', requirePermission('users.roles'), controller.updateUserRole);
+router.patch('/users/:id/status', requirePermission('users.status'), controller.updateUserStatus);
+router.put('/users/:id/permissions', requirePermission('users.roles'), controller.updateUserPermissions);
+router.get('/stats', requirePermission('users.view'), controller.getSystemStats);
+router.get('/audit-logs', requirePermission('audit.view'), controller.getAuditLogs);
 module.exports = router;

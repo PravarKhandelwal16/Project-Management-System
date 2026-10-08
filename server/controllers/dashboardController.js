@@ -1,5 +1,5 @@
 const { pool } = require('../config/db');
-const { ROLES } = require('../utils/roles');
+const { projectScope, hasPermission } = require('../services/accessService');
 const { format, subDays, startOfWeek, addDays } = require('date-fns');
 
 /**
@@ -10,31 +10,12 @@ const getDashboardData = async (req, res, next) => {
   try {
     const user = req.user;
     
-    // Base WHERE clauses for RBAC
-    let projectWhere = '1=1';
-    let projectParams = [];
-    
-    let taskWhere = '1=1';
-    let taskParams = [];
-
-    let isMember = false;
-
-    if (user.role === ROLES.SUPER_ADMIN || user.role === ROLES.ADMIN) {
-      // Full access
-    } else if (user.role === ROLES.PROJECT_MANAGER) {
-      projectWhere = 'user_id = ?';
-      projectParams.push(user.id);
-      
-      taskWhere = `project_id IN (SELECT id FROM projects WHERE user_id = ?)`;
-      taskParams.push(user.id);
-    } else {
-      isMember = true;
-      projectWhere = `id IN (SELECT project_id FROM project_members WHERE user_id = ?)`;
-      projectParams.push(user.id);
-      
-      taskWhere = `project_id IN (SELECT project_id FROM project_members WHERE user_id = ?)`;
-      taskParams.push(user.id);
-    }
+    const scope = projectScope(user);
+    const projectWhere = `id IN (SELECT p.id FROM projects p WHERE ${scope.sql})`;
+    const projectParams = scope.params;
+    const taskWhere = hasPermission(user, 'tasks.view') ? `project_id IN (SELECT p.id FROM projects p WHERE ${scope.sql})` : '0=1';
+    const taskParams = hasPermission(user, 'tasks.view') ? [...scope.params] : [];
+    const isMember = !hasPermission(user, 'tasks.status');
 
     // 1. Project Summary & Status
     const [projectRows] = await pool.query(
@@ -90,22 +71,16 @@ const getDashboardData = async (req, res, next) => {
     let overdueWhere = taskWhere + ` AND status != 'Completed' AND due_date < CURDATE()`;
     let overdueParams = [...taskParams];
     if (isMember) {
-      overdueWhere += ` AND assigned_to = ?`;
+      overdueWhere += ` AND user_id = ?`;
       overdueParams.push(user.id);
     }
     const [overdueRows] = await pool.query(`SELECT COUNT(*) as count FROM tasks WHERE ${overdueWhere}`, overdueParams);
     const overdueTasksCount = Number(overdueRows[0].count);
 
     // 3. Task Activity (last 7 days)
-    let auditWhere = '1=1';
-    let auditParams = [];
-    if (user.role === ROLES.PROJECT_MANAGER) {
-      auditWhere = `resource_id IN (SELECT id FROM tasks WHERE project_id IN (SELECT id FROM projects WHERE user_id = ?))`;
-      auditParams.push(user.id);
-    } else if (isMember) {
-      auditWhere = `user_id = ?`;
-      auditParams.push(user.id);
-    }
+    const auditScope = projectScope(user);
+    const auditWhere = hasPermission(user, 'tasks.view') ? `resource_type = 'TASK' AND resource_id IN (SELECT t.id FROM tasks t JOIN projects p ON t.project_id = p.id WHERE ${auditScope.sql})` : '0=1';
+    const auditParams = hasPermission(user, 'tasks.view') ? auditScope.params : [];
 
     const [activityRows] = await pool.query(`
       SELECT DATE(created_at) as date, action, COUNT(*) as count 
@@ -166,7 +141,7 @@ const getDashboardData = async (req, res, next) => {
         (SELECT COUNT(*) FROM tasks t WHERE t.project_id = p.id) as total_project_tasks,
         (SELECT COUNT(*) FROM tasks t WHERE t.project_id = p.id AND t.status = 'Completed') as completed_project_tasks
       FROM projects p
-      WHERE ${projectWhere.replace('user_id', 'p.user_id').replace('id IN', 'p.id IN')}
+      WHERE p.${projectWhere}
       ORDER BY p.updated_at DESC
       LIMIT 5
     `, projectParams);
@@ -188,14 +163,14 @@ const getDashboardData = async (req, res, next) => {
     let upcomingWhere = taskWhere + ` AND status != 'Completed' AND due_date >= CURDATE()`;
     let upcomingParams = [...taskParams];
     if (isMember) {
-      upcomingWhere += ` AND assigned_to = ?`;
+      upcomingWhere += ` AND user_id = ?`;
       upcomingParams.push(user.id);
     }
     const [upcomingTasksRows] = await pool.query(`
       SELECT t.id, t.name, t.priority, t.status, t.due_date, p.name as project_name
       FROM tasks t
       JOIN projects p ON t.project_id = p.id
-      WHERE ${upcomingWhere.replace(/project_id/g, 't.project_id').replace(/assigned_to/g, 't.assigned_to').replace(/status/g, 't.status')}
+      WHERE ${upcomingWhere.replace(/^project_id/, 't.project_id').replace(/ AND user_id/g, ' AND t.user_id').replace(/ AND status/g, ' AND t.status').replace(/ AND due_date/g, ' AND t.due_date')}
       ORDER BY t.due_date ASC
       LIMIT 5
     `, upcomingParams);
@@ -205,7 +180,7 @@ const getDashboardData = async (req, res, next) => {
       SELECT t.id, t.name, t.priority, t.status, t.due_date, p.name as project_name
       FROM tasks t
       JOIN projects p ON t.project_id = p.id
-      WHERE ${overdueWhere.replace(/project_id/g, 't.project_id').replace(/assigned_to/g, 't.assigned_to').replace(/due_date/g, 't.due_date').replace(/status/g, 't.status')}
+      WHERE ${overdueWhere.replace(/^project_id/, 't.project_id').replace(/ AND user_id/g, ' AND t.user_id').replace(/ AND due_date/g, ' AND t.due_date').replace(/ AND status/g, ' AND t.status')}
       ORDER BY t.due_date ASC
       LIMIT 5
     `, overdueParams);
@@ -215,7 +190,7 @@ const getDashboardData = async (req, res, next) => {
       SELECT a.id, a.action, a.created_at, u.full_name as user_name
       FROM audit_logs a
       JOIN users u ON a.user_id = u.id
-      WHERE ${auditWhere.replace('resource_id', 'a.resource_id').replace('user_id', 'a.user_id')}
+      WHERE ${auditWhere.replace('resource_type', 'a.resource_type').replace('resource_id', 'a.resource_id')}
       ORDER BY a.created_at DESC
       LIMIT 5
     `, auditParams);

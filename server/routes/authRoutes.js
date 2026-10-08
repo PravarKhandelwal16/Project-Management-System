@@ -23,7 +23,7 @@ router.post('/login', authRateLimiter, authController.login);
  * @desc    Stateless logout acknowledgment
  * @access  Public
  */
-router.post('/logout', authController.logout);
+router.post('/logout', authenticateToken, authController.logout);
 
 /**
  * @route   GET /api/auth/me

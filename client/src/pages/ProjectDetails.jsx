@@ -1,3 +1,4 @@
+import accessCatalog from '@shared/access.json';
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -8,14 +9,14 @@ import {
   getProjectMembersApi,
   addProjectMemberApi,
   removeProjectMemberApi,
-  getAdminUsersApi,
+  apiRequest,
 } from '../services/api';
 import StatusBadge from '../components/StatusBadge';
 
 export const ProjectDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { user, isSuperAdmin, isAdmin } = useAuth();
+  const { user, hasPermission } = useAuth();
 
   const [project, setProject] = useState(null);
   const [members, setMembers] = useState([]);
@@ -70,8 +71,10 @@ export const ProjectDetails = () => {
     fetchProjectDetails();
   }, [fetchProjectDetails]);
 
-  // Determine manage permission: Super Admin, Admin, or project owner
-  const canManage = isSuperAdmin || isAdmin || (project && project.user_id === user?.id);
+  // Scope is checked by the API; actions follow the current permission policy.
+  const canManage = hasPermission('team.manage');
+  const canEdit = hasPermission('projects.edit');
+  const canDelete = hasPermission('projects.delete');
 
   // Load available users when opening Add Member Modal
   const handleOpenAddMemberModal = async () => {
@@ -80,7 +83,7 @@ export const ProjectDetails = () => {
     setSelectedUserId('');
     setLoadingUsers(true);
     try {
-      const res = await getAdminUsersApi();
+      const res = await apiRequest('/team/projects/' + id + '/candidates');
       if (res.success && res.data) {
         // Filter out users who are already members or the project owner
         const existingMemberIds = new Set(members.map((m) => m.user_id));
@@ -245,22 +248,22 @@ export const ProjectDetails = () => {
               </p>
             </div>
 
-            {canManage && (
+            {(canEdit || canDelete) && (
               <div className="project-actions-row">
-                <button
+                {canEdit && <button
                   onClick={() => setShowEditModal(true)}
                   className="secondary-btn"
                   id="edit-project-btn"
                 >
                   Edit Project
-                </button>
-                <button
+                </button>}
+                {canDelete && <button
                   onClick={handleDeleteProject}
                   className="logout-btn"
                   id="delete-project-btn"
                 >
                   Delete
-                </button>
+                </button>}
               </div>
             )}
           </div>
@@ -357,7 +360,7 @@ export const ProjectDetails = () => {
                       </td>
                       <td>{member.email}</td>
                       <td>
-                        <span className="role-tag role-member">{member.role}</span>
+                        <span className="role-tag role-member">{accessCatalog.roles.find(role => role.key === member.role)?.label || member.role}</span>
                       </td>
                       <td>{new Date(member.joined_at).toLocaleDateString()}</td>
                       <td>{member.added_by_name || 'System'}</td>
@@ -531,7 +534,7 @@ export const ProjectDetails = () => {
                   >
                     {availableUsers.map((u) => (
                       <option key={u.id} value={u.id}>
-                        {u.full_name} ({u.email}) — [{u.role}]
+                        {u.full_name} ({u.email}) — [{accessCatalog.roles.find(role => role.key === u.role)?.label || u.role}]
                       </option>
                     ))}
                   </select>

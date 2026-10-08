@@ -3,7 +3,7 @@ const { createAuditLog } = require('../models/auditModel');
 /**
  * Service to record system audit logs safely
  */
-const logAuditEvent = async ({ userId, action, resourceType, resourceId, details }) => {
+const logAuditEvent = async ({ userId, action, resourceType, resourceId, details, actor }) => {
   try {
     await createAuditLog({
       userId,
@@ -11,6 +11,7 @@ const logAuditEvent = async ({ userId, action, resourceType, resourceId, details
       resourceType,
       resourceId,
       details,
+      actor,
     });
   } catch (error) {
     // Non-blocking error handling: Log warning but prevent crashing the main transaction

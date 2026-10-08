@@ -1,6 +1,7 @@
 const projectMemberModel = require('../models/projectMemberModel');
 const userModel = require('../models/userModel');
-const { logAuditEvent } = require('../services/auditService');
+const { pool } = require('../config/db');
+const { createAuditLog } = require('../models/auditModel');
 
 /**
  * Controller for Project Membership Management
@@ -34,7 +35,7 @@ const addMember = async (req, res, next) => {
     const projectId = req.project.id;
     const { user_id } = req.body;
 
-    if (!user_id || isNaN(Number(user_id))) {
+    if (!Number.isSafeInteger(Number(user_id)) || Number(user_id) < 1) {
       return res.status(400).json({
         success: false,
         message: 'Valid user ID is required',
@@ -76,25 +77,23 @@ const addMember = async (req, res, next) => {
       });
     }
 
-    // 4. Add member
-    await projectMemberModel.addMember({
-      projectId,
-      userId: targetUserId,
-      addedBy: req.user.id,
-    });
-
-    // 5. Audit log
-    await logAuditEvent({
-      userId: req.user.id,
-      action: 'PROJECT_MEMBER_ADDED',
-      resourceType: 'PROJECT',
-      resourceId: projectId,
-      details: {
-        addedUserId: targetUserId,
-        addedUserEmail: targetUser.email,
-        projectName: req.project.name,
-      },
-    });
+    const connection = await pool.getConnection();
+    try {
+      await connection.beginTransaction();
+      const [activeUsers] = await connection.execute('SELECT id, is_active FROM users WHERE id = ? FOR UPDATE', [targetUserId]);
+      if (!activeUsers[0]?.is_active) {
+        await connection.rollback();
+        return res.status(409).json({ success: false, message: 'This account is no longer active.' });
+      }
+      await connection.execute('INSERT INTO project_members (project_id, user_id, added_by) VALUES (?, ?, ?)', [projectId, targetUserId, req.user.id]);
+      await createAuditLog({ userId: req.user.id, action: 'PROJECT_MEMBER_ADDED', resourceType: 'PROJECT', resourceId: projectId,
+        details: { addedUserId: targetUserId, addedUserEmail: targetUser.email, projectName: req.project.name, before: { member: null }, after: { member: targetUserId } } }, connection);
+      await connection.commit();
+    } catch (error) {
+      await connection.rollback();
+      if (error.code === 'ER_DUP_ENTRY') return res.status(409).json({ success: false, message: 'This user has already been added to the project.' });
+      throw error;
+    } finally { connection.release(); }
 
     const members = await projectMemberModel.getMembersByProjectId(projectId);
 
@@ -117,7 +116,7 @@ const removeMember = async (req, res, next) => {
     const projectId = req.project.id;
     const targetUserId = Number(req.params.userId);
 
-    if (!targetUserId || isNaN(targetUserId)) {
+    if (!Number.isSafeInteger(targetUserId) || targetUserId < 1) {
       return res.status(400).json({
         success: false,
         message: 'Invalid user ID',
@@ -141,20 +140,20 @@ const removeMember = async (req, res, next) => {
       });
     }
 
-    // Remove member
-    await projectMemberModel.removeMember(projectId, targetUserId);
-
-    // Audit log
-    await logAuditEvent({
-      userId: req.user.id,
-      action: 'PROJECT_MEMBER_REMOVED',
-      resourceType: 'PROJECT',
-      resourceId: projectId,
-      details: {
-        removedUserId: targetUserId,
-        projectName: req.project.name,
-      },
-    });
+    const connection = await pool.getConnection();
+    try {
+      await connection.beginTransaction();
+      await connection.execute('SELECT id FROM project_members WHERE project_id = ? AND user_id = ? FOR UPDATE', [projectId, targetUserId]);
+      const [openTasks] = await connection.execute("SELECT id FROM tasks WHERE project_id = ? AND user_id = ? AND status != 'Completed' FOR UPDATE", [projectId, targetUserId]);
+      if (openTasks.length) {
+        await connection.rollback();
+        return res.status(409).json({ success: false, message: 'Reassign or complete this member\'s open tasks before removing them.' });
+      }
+      await connection.execute('DELETE FROM project_members WHERE project_id = ? AND user_id = ?', [projectId, targetUserId]);
+      await createAuditLog({ userId: req.user.id, action: 'PROJECT_MEMBER_REMOVED', resourceType: 'PROJECT', resourceId: projectId,
+        details: { removedUserId: targetUserId, projectName: req.project.name, before: { member: targetUserId }, after: { member: null } } }, connection);
+      await connection.commit();
+    } catch (error) { await connection.rollback(); throw error; } finally { connection.release(); }
 
     const members = await projectMemberModel.getMembersByProjectId(projectId);
 

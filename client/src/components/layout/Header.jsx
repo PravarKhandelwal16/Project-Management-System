@@ -1,3 +1,4 @@
+import accessCatalog from '@shared/access.json';
 import { useState, useRef, useEffect } from 'react';
 import { Menu, Search, Bell, Sun, User as UserIcon, LogOut, Settings } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
@@ -69,7 +70,7 @@ const Header = ({ toggleSidebar }) => {
 
   const formatRole = (role) => {
     if (!role) return '';
-    return role.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+    return accessCatalog.roles.find(item => item.key === role)?.label || role;
   };
 
   return (

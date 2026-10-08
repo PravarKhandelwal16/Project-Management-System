@@ -18,5 +18,6 @@ router.use('/dashboard', dashboardRoutes);
 router.use('/search', searchRoutes);
 router.use('/admin', adminRoutes);
 router.use('/notifications', notificationRoutes);
+router.use('/team', require('./teamRoutes'));
 
 module.exports = router;

@@ -19,7 +19,7 @@ import StatusBadge from '../components/StatusBadge';
 import './Dashboard.css';
 
 const Dashboard = () => {
-  const { user, canCreateProject } = useAuth();
+  const { canCreateProject, hasPermission } = useAuth();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -181,7 +181,7 @@ const Dashboard = () => {
         <div className="data-card">
           <div className="data-card-header">
             <h3 className="data-card-title">Recent Activity</h3>
-            {user?.role === 'super_admin' || user?.role === 'admin' ? (
+            {hasPermission('audit.view') ? (
               <Link to="/admin/audit-logs" className="data-card-link">View Audit Logs</Link>
             ) : null}
           </div>

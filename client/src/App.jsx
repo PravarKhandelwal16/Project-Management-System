@@ -55,7 +55,7 @@ function App() {
           <Route
             path="/projects"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute permission="projects.view">
                 <AppLayout>
                   <Projects />
                 </AppLayout>
@@ -65,7 +65,7 @@ function App() {
           <Route
             path="/projects/:id"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute permission="projects.view">
                 <AppLayout>
                   <ProjectDetails />
                 </AppLayout>
@@ -75,7 +75,7 @@ function App() {
           <Route
             path="/tasks"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute permission="tasks.view">
                 <AppLayout>
                   <Tasks />
                 </AppLayout>
@@ -85,7 +85,7 @@ function App() {
           <Route
             path="/tasks/:id"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute permission="tasks.view">
                 <AppLayout>
                   <TaskDetails />
                 </AppLayout>
@@ -95,7 +95,7 @@ function App() {
           <Route
             path="/calendar"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute permission="tasks.view">
                 <AppLayout>
                   <CalendarPage />
                 </AppLayout>
@@ -105,7 +105,7 @@ function App() {
           <Route
             path="/analytics"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute permission="analytics.view">
                 <AppLayout>
                   <Analytics />
                 </AppLayout>
@@ -115,7 +115,7 @@ function App() {
           <Route
             path="/team"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute permission="team.view">
                 <AppLayout>
                   <Team />
                 </AppLayout>
@@ -145,7 +145,7 @@ function App() {
           <Route
             path="/admin/users"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute permission="users.view">
                 <AppLayout>
                   <AdminUsers />
                 </AppLayout>
@@ -155,7 +155,7 @@ function App() {
           <Route
             path="/admin/audit-logs"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute permission="audit.view">
                 <AppLayout>
                   <AdminAuditLogs />
                 </AppLayout>

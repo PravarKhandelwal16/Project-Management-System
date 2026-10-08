@@ -15,7 +15,7 @@ import { useAuth } from '../../context/AuthContext';
 import './Layout.css';
 
 const Sidebar = ({ isOpen, toggleSidebar }) => {
-  const { user, logout } = useAuth();
+  const { hasPermission, logout } = useAuth();
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -24,20 +24,20 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
   };
 
   const navItems = [
-    { name: 'Dashboard', path: '/dashboard', icon: <LayoutDashboard size={20} />, roles: ['super_admin', 'admin', 'project_manager', 'member'] },
-    { name: 'Projects', path: '/projects', icon: <FolderKanban size={20} />, roles: ['super_admin', 'admin', 'project_manager', 'member'] },
-    { name: 'Tasks', path: '/tasks', icon: <CheckSquare size={20} />, roles: ['super_admin', 'admin', 'project_manager', 'member'] },
-    { name: 'Calendar', path: '/calendar', icon: <Calendar size={20} />, roles: ['super_admin', 'admin', 'project_manager', 'member'] },
-    { name: 'Analytics', path: '/analytics', icon: <BarChart2 size={20} />, roles: ['super_admin', 'admin', 'project_manager'] },
-    { name: 'Team', path: '/team', icon: <Users size={20} />, roles: ['super_admin', 'admin', 'project_manager'] },
+    { name: 'Dashboard', path: '/dashboard', icon: <LayoutDashboard size={20} />, permission: null },
+    { name: 'Projects', path: '/projects', icon: <FolderKanban size={20} />, permission: 'projects.view' },
+    { name: 'Tasks', path: '/tasks', icon: <CheckSquare size={20} />, permission: 'tasks.view' },
+    { name: 'Calendar', path: '/calendar', icon: <Calendar size={20} />, permission: 'tasks.view' },
+    { name: 'Analytics', path: '/analytics', icon: <BarChart2 size={20} />, permission: 'analytics.view' },
+    { name: 'Team', path: '/team', icon: <Users size={20} />, permission: 'team.view' },
   ];
 
   const adminItems = [
-    { name: 'User Management', path: '/admin/users', icon: <Users size={20} />, roles: ['super_admin', 'admin'] },
-    { name: 'Audit Logs', path: '/admin/audit-logs', icon: <ShieldAlert size={20} />, roles: ['super_admin', 'admin'] },
+    { name: 'User Management', path: '/admin/users', icon: <Users size={20} />, permission: 'users.view' },
+    { name: 'Audit Logs', path: '/admin/audit-logs', icon: <ShieldAlert size={20} />, permission: 'audit.view' },
   ];
 
-  const canSee = (roles) => roles.includes(user?.role);
+  const canSee = permission => !permission || hasPermission(permission);
 
   return (
     <>
@@ -57,7 +57,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
           <div className="nav-section">
             <h3 className="nav-section-title">Main Menu</h3>
             <ul className="nav-list">
-              {navItems.filter(item => canSee(item.roles)).map(item => (
+              {navItems.filter(item => canSee(item.permission)).map(item => (
                 <li key={item.path} className="nav-item">
                   <NavLink to={item.path} className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
                     {item.icon}
@@ -68,11 +68,11 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
             </ul>
           </div>
 
-          {(user?.role === 'super_admin' || user?.role === 'admin') && (
+          {adminItems.some(item => canSee(item.permission)) && (
             <div className="nav-section">
               <h3 className="nav-section-title">Administration</h3>
               <ul className="nav-list">
-                {adminItems.filter(item => canSee(item.roles)).map(item => (
+                {adminItems.filter(item => canSee(item.permission)).map(item => (
                   <li key={item.path} className="nav-item">
                     <NavLink to={item.path} className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
                       {item.icon}

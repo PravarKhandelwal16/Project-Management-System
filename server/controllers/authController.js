@@ -1,6 +1,7 @@
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const userModel = require('../models/userModel');
+const { resolveAccess } = require('../services/accessService');
 const { logAuditEvent } = require('../services/auditService');
 const {
   validateRegisterInput,
@@ -53,6 +54,7 @@ const register = async (req, res, next) => {
     // 5. Record audit log
     await logAuditEvent({
       userId,
+      actor: { full_name: trimmedName, email: normalizedEmail },
       action: 'USER_REGISTERED',
       resourceType: 'USER',
       resourceId: userId,
@@ -95,6 +97,7 @@ const login = async (req, res, next) => {
     // 2. Fetch user by email
     const user = await userModel.findByEmail(normalizedEmail);
     if (!user) {
+      await logAuditEvent({ action: 'USER_LOGIN_FAILED', resourceType: 'ACCESS', details: { email: normalizedEmail, reason: 'Invalid credentials' } });
       return res.status(401).json({
         success: false,
         message: 'Invalid email or password',
@@ -112,6 +115,7 @@ const login = async (req, res, next) => {
     // 3. Verify password hash using bcrypt
     const isPasswordMatch = await bcrypt.compare(password, user.password_hash);
     if (!isPasswordMatch) {
+      await logAuditEvent({ userId: user.id, actor: user, action: 'USER_LOGIN_FAILED', resourceType: 'ACCESS', resourceId: user.id, details: { reason: 'Invalid credentials' } });
       return res.status(401).json({
         success: false,
         message: 'Invalid email or password',
@@ -142,6 +146,7 @@ const login = async (req, res, next) => {
     const clientIp = req.ip || req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'unknown';
     await logAuditEvent({
       userId: user.id,
+      actor: { full_name: user.full_name, email: user.email },
       action: 'USER_LOGIN',
       resourceType: 'USER',
       resourceId: user.id,
@@ -162,6 +167,7 @@ const login = async (req, res, next) => {
         email: user.email,
         role: user.role,
         is_active: !!user.is_active,
+        ...(await resolveAccess(await userModel.findById(user.id))),
       },
     });
   } catch (error) {
@@ -183,7 +189,7 @@ const getMe = async (req, res, next) => {
         full_name: req.user.full_name,
         email: req.user.email,
         role: req.user.role,
-        is_active: req.user.is_active,
+        ...req.user,
       },
     });
   } catch (error) {
@@ -196,6 +202,7 @@ const getMe = async (req, res, next) => {
  * POST /api/auth/logout
  */
 const logout = async (req, res) => {
+  await logAuditEvent({ userId: req.user.id, action: 'USER_LOGOUT', resourceType: 'USER', resourceId: req.user.id });
   return res.status(200).json({
     success: true,
     message: 'Logout successful',

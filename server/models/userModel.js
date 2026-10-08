@@ -11,7 +11,7 @@ const { pool } = require('../config/db');
  */
 const findByEmail = async (email) => {
   const sql = `
-    SELECT id, full_name, email, password_hash, role, is_active, created_at, updated_at
+    SELECT id, full_name, email, password_hash, role, is_active, department, job_title, permission_overrides, created_at, updated_at
     FROM users
     WHERE email = ?
     LIMIT 1
@@ -27,7 +27,7 @@ const findByEmail = async (email) => {
  */
 const findById = async (id) => {
   const sql = `
-    SELECT id, full_name, email, role, is_active, created_at, updated_at
+    SELECT id, full_name, email, role, is_active, department, job_title, permission_overrides, created_at, updated_at
     FROM users
     WHERE id = ?
     LIMIT 1
@@ -69,18 +69,18 @@ const createUser = async ({ full_name, email, password_hash, role = 'member', is
  * @param {string|number|boolean} [filters.is_active]
  * @returns {Promise<Array<object>>}
  */
-const findAll = async ({ search = '', role = '', is_active = '' } = {}) => {
+const findAll = async ({ search = '', role = '', is_active = '', page = 1, limit = 25 } = {}) => {
   let sql = `
-    SELECT id, full_name, email, role, is_active, created_at, updated_at
+    SELECT id, full_name, email, role, is_active, department, job_title, permission_overrides, created_at, updated_at
     FROM users
     WHERE 1=1
   `;
   const params = [];
 
   if (search && search.trim()) {
-    sql += ` AND (full_name LIKE ? OR email LIKE ?)`;
+    sql += ` AND (full_name LIKE ? OR email LIKE ? OR department LIKE ? OR job_title LIKE ?)`;
     const searchPattern = `%${search.trim()}%`;
-    params.push(searchPattern, searchPattern);
+    params.push(searchPattern, searchPattern, searchPattern, searchPattern);
   }
 
   if (role && role.trim()) {
@@ -94,10 +94,11 @@ const findAll = async ({ search = '', role = '', is_active = '' } = {}) => {
     params.push(activeVal);
   }
 
-  sql += ` ORDER BY created_at DESC`;
-
-  const [rows] = await pool.execute(sql, params);
-  return rows;
+  const countSql = 'SELECT COUNT(*) AS total FROM users WHERE' + sql.split('WHERE')[1];
+  const [counts] = await pool.execute(countSql, params);
+  sql += ' ORDER BY created_at DESC, id DESC LIMIT ? OFFSET ?';
+  const [rows] = await pool.query(sql, [...params, limit, (page - 1) * limit]);
+  return { data: rows, total: Number(counts[0].total) };
 };
 
 /**

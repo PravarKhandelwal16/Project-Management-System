@@ -150,9 +150,8 @@ const updateProject = async (req, res, next) => {
       resourceType: 'PROJECT',
       resourceId: projectId,
       details: {
-        name,
-        status,
-        updatedBy: req.user.id,
+        before: Object.fromEntries(['name','description','status','start_date','end_date'].map(key => [key,req.project[key]])),
+        after: { name: name ?? req.project.name, description: description !== undefined ? description : req.project.description, status: status ?? req.project.status, start_date: start_date !== undefined ? start_date : req.project.start_date, end_date: end_date !== undefined ? end_date : req.project.end_date },
       },
     });
 

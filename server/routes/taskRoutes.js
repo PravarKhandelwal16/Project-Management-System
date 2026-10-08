@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const authenticateToken = require('../middleware/authMiddleware');
-const { requireTaskAccess } = require('../middleware/rbacMiddleware');
+const { requireTaskAccess, requireProjectAccess, requirePermission } = require('../middleware/rbacMiddleware');
 const taskController = require('../controllers/taskController');
 
 // All task routes require authentication
@@ -12,14 +12,14 @@ router.use(authenticateToken);
  * @desc    Get all accessible tasks (supports project_id, status, priority, assigned_to, search, sort, pagination)
  * @access  Private
  */
-router.get('/', taskController.getTasks);
+router.get('/', requirePermission('tasks.view'), taskController.getTasks);
 
 /**
  * @route   POST /api/tasks
  * @desc    Create a new task in a project
  * @access  Private (Project Manager owner, Super Admin, Admin)
  */
-router.post('/', taskController.createTask);
+router.post('/', requirePermission('tasks.view'), requireProjectAccess('tasks'), taskController.createTask);
 
 /**
  * @route   GET /api/tasks/:id
@@ -54,7 +54,7 @@ router.patch('/:id/priority', requireTaskAccess('edit'), taskController.updatePr
  * @desc    Assign or reassign task
  * @access  Private (Project Manager owner, Admin)
  */
-router.patch('/:id/assign', requireTaskAccess('edit'), taskController.assignTask);
+router.patch('/:id/assign', requireTaskAccess('assign'), taskController.assignTask);
 
 /**
  * @route   DELETE /api/tasks/:id

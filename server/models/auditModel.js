@@ -1,44 +1,18 @@
 const { pool } = require('../config/db');
-
-/**
- * Audit Model - handles database interactions for audit_logs table
- */
-
-/**
- * Insert an audit log entry
- * @param {object} logData
- * @param {number|null} logData.userId - User ID who triggered the action
- * @param {string} logData.action - Action name (e.g. USER_REGISTERED, USER_LOGIN)
- * @param {string} logData.resourceType - Resource type (e.g. USER, PROJECT, TASK)
- * @param {number|null} logData.resourceId - Resource ID
- * @param {string|null} [logData.details] - Serialized JSON or description string
- * @returns {Promise<number>} Inserted log ID
- */
-const createAuditLog = async ({
-  userId = null,
-  action,
-  resourceType,
-  resourceId = null,
-  details = null,
-}) => {
-  const sql = `
-    INSERT INTO audit_logs (user_id, action, resource_type, resource_id, details)
-    VALUES (?, ?, ?, ?, ?)
-  `;
-
-  const detailsValue = typeof details === 'object' ? JSON.stringify(details) : details;
-
-  const [result] = await pool.execute(sql, [
-    userId,
-    action,
-    resourceType,
-    resourceId,
-    detailsValue,
-  ]);
-
+const { auditContext } = require('../middleware/auditContext');
+function redact(value) {
+  if (Array.isArray(value)) return value.map(redact);
+  if (value && typeof value === 'object') return Object.fromEntries(Object.entries(value).map(([key, item]) => [key, /password|secret|token/i.test(key) ? '[REDACTED]' : redact(item)]));
+  return value;
+}
+async function createAuditLog({ userId = null, action, resourceType, resourceId = null, details = null, actor }, executor = pool) {
+  const context = auditContext.getStore();
+  const identity = actor || context?.req.user;
+  const [result] = await executor.execute(
+    'INSERT INTO audit_logs (user_id, action, resource_type, resource_id, details, actor_name, actor_email, ip_address, request_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+    [userId, action, resourceType, resourceId, details == null ? null : JSON.stringify(redact(details)),
+      identity?.full_name || null, identity?.email || null, context?.req.ip || null, context?.requestId || null]
+  );
   return result.insertId;
-};
-
-module.exports = {
-  createAuditLog,
-};
+}
+module.exports = { createAuditLog, redact };

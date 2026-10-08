@@ -3,7 +3,7 @@ const projectModel = require('../models/projectModel');
 const projectMemberModel = require('../models/projectMemberModel');
 const userModel = require('../models/userModel');
 const { logAuditEvent } = require('../services/auditService');
-const { ROLES } = require('../utils/roles');
+const { hasPermission } = require('../services/accessService');
 const {
   validateTaskInput,
   VALID_TASK_STATUSES,
@@ -20,6 +20,7 @@ const notificationService = require('../services/notificationService');
  * Assignee must exist, be active, and either be project owner or in project_members
  */
 const verifyEligibleAssignee = async (projectId, projectOwnerId, userId) => {
+  if (userId !== null && userId !== undefined && (!Number.isSafeInteger(userId) || userId < 1)) return { eligible: false, message: 'Assignee must be a valid user ID.' };
   if (!userId) return { eligible: true }; // Unassigned is valid
 
   const user = await userModel.findById(userId);
@@ -156,24 +157,8 @@ const createTask = async (req, res, next) => {
       });
     }
 
-    // RBAC: Check if user is authorized to create tasks in this project
     const user = req.user;
-    if (user.role === ROLES.SUPER_ADMIN || user.role === ROLES.ADMIN) {
-      // Allowed
-    } else if (user.role === ROLES.PROJECT_MANAGER) {
-      if (project.user_id !== user.id) {
-        return res.status(403).json({
-          success: false,
-          message: 'Forbidden: You can only create tasks in projects you manage.',
-        });
-      }
-    } else {
-      return res.status(403).json({
-        success: false,
-        message: 'Forbidden: Members are not permitted to create tasks.',
-      });
-    }
-
+    if (assigned_to && !hasPermission(user, 'tasks.assign')) return res.status(403).json({ success: false, message: 'Task assignment permission is required.' });
     // 2. Validate input fields
     const validation = validateTaskInput({
       name,
@@ -227,6 +212,7 @@ const createTask = async (req, res, next) => {
       },
     });
 
+    const newTask = await taskModel.getTaskById(taskId);
     if (assigned_to) {
       await logAuditEvent({
         userId: user.id,
@@ -243,8 +229,6 @@ const createTask = async (req, res, next) => {
         await notificationService.notifyTaskAssigned(newTask, project, eligibility.user, false);
       }
     }
-
-    const newTask = await taskModel.getTaskById(taskId);
 
     return res.status(201).json({
       success: true,
@@ -288,6 +272,8 @@ const updateTask = async (req, res, next) => {
       });
     }
 
+    if (assigned_to !== undefined && Number(assigned_to || 0) !== Number(currentTask.assigned_to || 0) && !hasPermission(req.user, 'tasks.assign')) return res.status(403).json({ success: false, message: 'Task assignment permission is required.' });
+    if (status !== undefined && status !== currentTask.status && !hasPermission(req.user, 'tasks.status') && !(currentTask.assigned_to === req.user.id && hasPermission(req.user, 'tasks.status_assigned'))) return res.status(403).json({ success: false, message: 'Task status permission is required.' });
     // Validate assignee if changed
     const targetAssignee = assigned_to !== undefined ? (assigned_to ? Number(assigned_to) : null) : currentTask.assigned_to;
     if (targetAssignee && targetAssignee !== currentTask.assigned_to) {
@@ -320,8 +306,9 @@ const updateTask = async (req, res, next) => {
       resourceType: 'TASK',
       resourceId: currentTask.id,
       details: {
-        taskId: currentTask.id,
         projectId: currentTask.project_id,
+        before: Object.fromEntries(['name','description','priority','status','due_date','assigned_to'].map(key => [key,currentTask[key]])),
+        after: { name: name ?? currentTask.name, description: description !== undefined ? description : currentTask.description, priority: priority ?? currentTask.priority, status: status ?? currentTask.status, due_date: due_date !== undefined ? due_date : currentTask.due_date, assigned_to: targetAssignee },
       },
     });
 
@@ -483,7 +470,7 @@ const assignTask = async (req, res, next) => {
 
     const targetUserId = assigned_to ? Number(assigned_to) : null;
 
-    if (targetUserId) {
+    if (assigned_to !== null && assigned_to !== undefined && assigned_to !== '') {
       const eligibility = await verifyEligibleAssignee(
         currentTask.project_id,
         currentTask.project_owner_id,
@@ -511,7 +498,7 @@ const assignTask = async (req, res, next) => {
       },
     });
 
-    if (targetUserId) {
+    if (assigned_to !== null && assigned_to !== undefined && assigned_to !== '') {
       const eligibility = await verifyEligibleAssignee(currentTask.project_id, currentTask.project_owner_id, targetUserId);
       const project = await projectModel.getProjectById(currentTask.project_id);
       if (eligibility.user && project) {

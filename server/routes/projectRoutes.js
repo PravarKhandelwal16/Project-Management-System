@@ -1,8 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const authenticateToken = require('../middleware/authMiddleware');
-const { authorizeRoles, requireProjectAccess } = require('../middleware/rbacMiddleware');
-const { PROJECT_CREATOR_ROLES } = require('../utils/roles');
+const { requirePermission, requireProjectAccess } = require('../middleware/rbacMiddleware');
 const projectController = require('../controllers/projectController');
 const projectMemberController = require('../controllers/projectMemberController');
 
@@ -14,14 +13,14 @@ router.use(authenticateToken);
  * @desc    List projects accessible to current user (scoped by role/membership)
  * @access  Private
  */
-router.get('/', projectController.getProjects);
+router.get('/', requirePermission('projects.view'), projectController.getProjects);
 
 /**
  * @route   POST /api/projects
  * @desc    Create a new project
  * @access  Private (Super Admin, Admin, Project Manager)
  */
-router.post('/', authorizeRoles(...PROJECT_CREATOR_ROLES), projectController.createProject);
+router.post('/', requirePermission('projects.view'), requirePermission('projects.create'), projectController.createProject);
 
 /**
  * @route   GET /api/projects/:id
@@ -42,7 +41,7 @@ router.put('/:id', requireProjectAccess('manage'), projectController.updateProje
  * @desc    Delete project
  * @access  Private (Project Manager owner or Admin)
  */
-router.delete('/:id', requireProjectAccess('manage'), projectController.deleteProject);
+router.delete('/:id', requireProjectAccess('delete'), projectController.deleteProject);
 
 /**
  * Project Members Sub-Routes
@@ -60,14 +59,14 @@ router.get('/:id/members', requireProjectAccess('view'), projectMemberController
  * @desc    Add member to a project
  * @access  Private (Project Manager owner or Admin)
  */
-router.post('/:id/members', requireProjectAccess('manage'), projectMemberController.addMember);
+router.post('/:id/members', requireProjectAccess('members'), projectMemberController.addMember);
 
 /**
  * @route   DELETE /api/projects/:id/members/:userId
  * @desc    Remove member from a project
  * @access  Private (Project Manager owner or Admin)
  */
-router.delete('/:id/members/:userId', requireProjectAccess('manage'), projectMemberController.removeMember);
+router.delete('/:id/members/:userId', requireProjectAccess('members'), projectMemberController.removeMember);
 
 /**
  * Project Tasks Sub-Routes
@@ -79,6 +78,6 @@ router.delete('/:id/members/:userId', requireProjectAccess('manage'), projectMem
  * @access  Private (Owner, Member, or Admin)
  */
 const taskController = require('../controllers/taskController');
-router.get('/:id/tasks', requireProjectAccess('view'), taskController.getProjectTasks);
+router.get('/:id/tasks', requireProjectAccess('view'), requirePermission('tasks.view'), taskController.getProjectTasks);
 
 module.exports = router;

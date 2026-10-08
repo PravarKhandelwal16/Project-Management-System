@@ -1,0 +1,294 @@
+{
+  "permissions": [
+    {
+      "key": "projects.view",
+      "group": "Projects",
+      "label": "View accessible projects",
+      "administrative": false
+    },
+    {
+      "key": "projects.view_all",
+      "group": "Projects",
+      "label": "Access every project in the workspace",
+      "administrative": false
+    },
+    {
+      "key": "projects.create",
+      "group": "Projects",
+      "label": "Create projects",
+      "administrative": false
+    },
+    {
+      "key": "projects.edit",
+      "group": "Projects",
+      "label": "Edit accessible projects",
+      "administrative": false
+    },
+    {
+      "key": "projects.delete",
+      "group": "Projects",
+      "label": "Delete accessible projects",
+      "administrative": false
+    },
+    {
+      "key": "tasks.view",
+      "group": "Tasks",
+      "label": "View tasks in accessible projects",
+      "administrative": false
+    },
+    {
+      "key": "tasks.create",
+      "group": "Tasks",
+      "label": "Create tasks",
+      "administrative": false
+    },
+    {
+      "key": "tasks.edit",
+      "group": "Tasks",
+      "label": "Edit task details and priority",
+      "administrative": false
+    },
+    {
+      "key": "tasks.assign",
+      "group": "Tasks",
+      "label": "Assign and reassign tasks",
+      "administrative": false
+    },
+    {
+      "key": "tasks.delete",
+      "group": "Tasks",
+      "label": "Delete tasks",
+      "administrative": false
+    },
+    {
+      "key": "tasks.status",
+      "group": "Tasks",
+      "label": "Update any task status in accessible projects",
+      "administrative": false
+    },
+    {
+      "key": "tasks.status_assigned",
+      "group": "Tasks",
+      "label": "Update own assigned task status",
+      "administrative": false
+    },
+    {
+      "key": "team.view",
+      "group": "Team",
+      "label": "View project teams and workloads",
+      "administrative": false
+    },
+    {
+      "key": "team.manage",
+      "group": "Team",
+      "label": "Add and remove project members",
+      "administrative": false
+    },
+    {
+      "key": "analytics.view",
+      "group": "Reporting",
+      "label": "View analytics",
+      "administrative": false
+    },
+    {
+      "key": "users.view",
+      "group": "Administration",
+      "label": "View all user accounts",
+      "administrative": true
+    },
+    {
+      "key": "users.create",
+      "group": "Administration",
+      "label": "Create user accounts",
+      "administrative": true
+    },
+    {
+      "key": "users.edit",
+      "group": "Administration",
+      "label": "Edit user profiles",
+      "administrative": true
+    },
+    {
+      "key": "users.roles",
+      "group": "Administration",
+      "label": "Assign user roles and individual permissions",
+      "administrative": true
+    },
+    {
+      "key": "users.status",
+      "group": "Administration",
+      "label": "Activate and deactivate accounts",
+      "administrative": true
+    },
+    {
+      "key": "roles.manage",
+      "group": "Administration",
+      "label": "Edit role permission policies",
+      "administrative": true
+    },
+    {
+      "key": "audit.view",
+      "group": "Administration",
+      "label": "View and export audit logs",
+      "administrative": true
+    }
+  ],
+  "roles": [
+    {
+      "key": "super_admin",
+      "label": "Super Admin",
+      "description": "Platform owner. Controls administrators and protected access policies.",
+      "permissions": [
+        "projects.view",
+        "projects.view_all",
+        "projects.create",
+        "projects.edit",
+        "projects.delete",
+        "tasks.view",
+        "tasks.create",
+        "tasks.edit",
+        "tasks.assign",
+        "tasks.delete",
+        "tasks.status",
+        "tasks.status_assigned",
+        "team.view",
+        "team.manage",
+        "analytics.view",
+        "users.view",
+        "users.create",
+        "users.edit",
+        "users.roles",
+        "users.status",
+        "roles.manage",
+        "audit.view"
+      ]
+    },
+    {
+      "key": "admin",
+      "label": "Workspace Administrator",
+      "description": "Manages accounts, access policies and workspace operations.",
+      "permissions": [
+        "projects.view",
+        "projects.view_all",
+        "projects.create",
+        "projects.edit",
+        "projects.delete",
+        "tasks.view",
+        "tasks.create",
+        "tasks.edit",
+        "tasks.assign",
+        "tasks.delete",
+        "tasks.status",
+        "tasks.status_assigned",
+        "team.view",
+        "team.manage",
+        "analytics.view",
+        "users.view",
+        "users.create",
+        "users.edit",
+        "users.roles",
+        "users.status",
+        "roles.manage",
+        "audit.view"
+      ]
+    },
+    {
+      "key": "portfolio_manager",
+      "label": "Portfolio Manager",
+      "description": "Oversees all projects, delivery and cross-project staffing.",
+      "permissions": [
+        "projects.view",
+        "tasks.view",
+        "team.view",
+        "projects.create",
+        "projects.edit",
+        "projects.delete",
+        "tasks.create",
+        "tasks.edit",
+        "tasks.assign",
+        "tasks.delete",
+        "tasks.status",
+        "tasks.status_assigned",
+        "team.manage",
+        "analytics.view",
+        "projects.view_all"
+      ]
+    },
+    {
+      "key": "project_manager",
+      "label": "Project Manager",
+      "description": "Accountable for delivery, schedules and staffing on owned or joined projects.",
+      "permissions": [
+        "projects.view",
+        "tasks.view",
+        "team.view",
+        "projects.create",
+        "projects.edit",
+        "projects.delete",
+        "tasks.create",
+        "tasks.edit",
+        "tasks.assign",
+        "tasks.delete",
+        "tasks.status",
+        "tasks.status_assigned",
+        "team.manage",
+        "analytics.view"
+      ]
+    },
+    {
+      "key": "project_coordinator",
+      "label": "Project Coordinator",
+      "description": "Maintains schedules, task assignments and project team records.",
+      "permissions": [
+        "projects.view",
+        "tasks.view",
+        "team.view",
+        "projects.edit",
+        "tasks.create",
+        "tasks.edit",
+        "tasks.assign",
+        "tasks.status",
+        "team.manage",
+        "analytics.view"
+      ]
+    },
+    {
+      "key": "team_lead",
+      "label": "Team Lead",
+      "description": "Coordinates execution and task allocation within joined project teams.",
+      "permissions": [
+        "projects.view",
+        "tasks.view",
+        "team.view",
+        "tasks.create",
+        "tasks.edit",
+        "tasks.assign",
+        "tasks.status",
+        "team.manage",
+        "analytics.view"
+      ]
+    },
+    {
+      "key": "member",
+      "label": "Team Member",
+      "description": "Contributes to project work and updates assigned tasks.",
+      "permissions": [
+        "projects.view",
+        "tasks.view",
+        "team.view",
+        "tasks.status_assigned"
+      ]
+    },
+    {
+      "key": "viewer",
+      "label": "Read-only Observer",
+      "description": "Reviews project progress and reporting without making changes.",
+      "permissions": [
+        "projects.view",
+        "tasks.view",
+        "team.view",
+        "analytics.view"
+      ]
+    }
+  ]
+}

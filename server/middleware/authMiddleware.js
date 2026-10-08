@@ -1,5 +1,6 @@
 const jwt = require('jsonwebtoken');
 const userModel = require('../models/userModel');
+const { resolveAccess } = require('../services/accessService');
 
 /**
  * Authentication Middleware
@@ -55,13 +56,7 @@ const authenticateToken = async (req, res, next) => {
     }
 
     // Attach fresh, database-verified user context to request
-    req.user = {
-      id: user.id,
-      email: user.email,
-      full_name: user.full_name,
-      role: user.role,
-      is_active: !!user.is_active,
-    };
+    req.user = await resolveAccess(user);
 
     next();
   } catch (error) {
@@ -72,10 +67,8 @@ const authenticateToken = async (req, res, next) => {
       });
     }
 
-    return res.status(401).json({
-      success: false,
-      message: 'Invalid or malformed token. Authentication failed.',
-    });
+    if (error.name === 'JsonWebTokenError' || error.name === 'NotBeforeError') return res.status(401).json({ success: false, message: 'Invalid token.' });
+    next(error);
   }
 };
 

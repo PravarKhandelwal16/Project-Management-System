@@ -1,5 +1,5 @@
 const { pool } = require('../config/db');
-const { ROLES } = require('../utils/roles');
+const { projectScope, hasPermission } = require('../services/accessService');
 const { validateProjectSort } = require('../utils/validation');
 
 /**
@@ -97,30 +97,15 @@ const getAccessibleProjects = async (user, { search = '', status = '', sortBy = 
       u.email as owner_email,
       (SELECT COUNT(*) FROM project_members pm WHERE pm.project_id = p.id) as member_count,
       CASE WHEN p.user_id = ? THEN 1 ELSE 0 END as is_owner,
-      CASE 
-        WHEN ? IN ('${ROLES.SUPER_ADMIN}', '${ROLES.ADMIN}') THEN 1
-        WHEN p.user_id = ? THEN 1
-        ELSE 0 
-      END as can_manage
+      ? as can_manage
     FROM projects p
     JOIN users u ON p.user_id = u.id
     WHERE 1=1
   `;
 
-  const params = [user.id, user.role, user.id];
-
-  // RBAC scope constraint
-  if (user.role === ROLES.SUPER_ADMIN || user.role === ROLES.ADMIN) {
-    // Universal visibility
-  } else if (user.role === ROLES.PROJECT_MANAGER) {
-    // Owned projects OR projects where user is a team member
-    sql += ` AND (p.user_id = ? OR p.id IN (SELECT project_id FROM project_members WHERE user_id = ?))`;
-    params.push(user.id, user.id);
-  } else {
-    // Member: only assigned projects
-    sql += ` AND (p.id IN (SELECT project_id FROM project_members WHERE user_id = ?))`;
-    params.push(user.id);
-  }
+  const scope = projectScope(user);
+  const params = [user.id, hasPermission(user, 'projects.edit') ? 1 : 0, ...scope.params];
+  sql += ' AND ' + scope.sql;
 
   // Search by project name
   if (search && search.trim()) {

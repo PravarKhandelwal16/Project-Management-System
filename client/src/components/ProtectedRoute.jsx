@@ -4,8 +4,8 @@ import { useAuth } from '../context/AuthContext';
 /**
  * ProtectedRoute component - ensures only authenticated users can access child routes
  */
-export const ProtectedRoute = ({ children }) => {
-  const { isAuthenticated, loading } = useAuth();
+export const ProtectedRoute = ({ children, permission }) => {
+  const { isAuthenticated, loading, hasPermission } = useAuth();
   const location = useLocation();
 
   if (loading) {
@@ -21,6 +21,7 @@ export const ProtectedRoute = ({ children }) => {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
+  if (permission && !hasPermission(permission)) return <div className="management-empty"><h2>Access restricted</h2><p>Your account does not have permission to view this page.</p><a href="/dashboard">Return to dashboard</a></div>;
   return children;
 };
 

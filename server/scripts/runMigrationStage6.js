@@ -1,5 +1,6 @@
 const path = require('path');
 require('dotenv').config({ path: path.join(__dirname, '../.env') });
+require('dotenv').config({ path: path.join(__dirname, '../../.env') });
 const mysql = require('mysql2/promise');
 const fs = require('fs');
 
@@ -8,7 +9,8 @@ async function runMigration() {
     host: process.env.DB_HOST || 'localhost',
     user: process.env.DB_USER || 'root',
     password: process.env.DB_PASSWORD || '',
-    database: process.env.DB_NAME || 'project_master',
+    database: process.env.DB_NAME || 'project_management',
+    port: Number(process.env.DB_PORT) || 3306,
     multipleStatements: true
   });
 
@@ -20,10 +22,11 @@ async function runMigration() {
     await connection.query(sql);
     console.log('Stage 6 migration completed successfully.');
   } catch (error) {
-    console.error('Migration failed:', error);
+    console.error('Migration failed:', error.message);
+    process.exitCode = 1;
   } finally {
     await connection.end();
   }
 }
 
-runMigration();
+runMigration().catch(error => { console.error(error.message); process.exitCode = 1; });

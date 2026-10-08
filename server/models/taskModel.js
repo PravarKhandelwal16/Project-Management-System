@@ -1,5 +1,5 @@
 const { pool } = require('../config/db');
-const { ROLES } = require('../utils/roles');
+const { projectScope, hasPermission } = require('../services/accessService');
 const { validateTaskSort } = require('../utils/validation');
 
 /**
@@ -120,22 +120,10 @@ const getAccessibleTasks = async (
     WHERE 1=1
   `;
 
-  const params = [];
-
-  // RBAC scope constraint
-  if (user.role === ROLES.SUPER_ADMIN) {
-    // Universal access
-  } else if (user.role === ROLES.ADMIN) {
-    // Admin has broad visibility across projects
-  } else if (user.role === ROLES.PROJECT_MANAGER) {
-    // Tasks in projects owned by PM OR where PM is a member
-    sql += ` AND (p.user_id = ? OR p.id IN (SELECT project_id FROM project_members WHERE user_id = ?))`;
-    params.push(user.id, user.id);
-  } else {
-    // Member: tasks in projects where user is a team member
-    sql += ` AND (p.id IN (SELECT project_id FROM project_members WHERE user_id = ?))`;
-    params.push(user.id);
-  }
+  const scope = projectScope(user);
+  const params = [...scope.params];
+  sql += ' AND ' + scope.sql;
+  if (!hasPermission(user, 'tasks.view')) sql += ' AND 0=1';
 
   // Filters
   if (project_id) {

@@ -17,7 +17,10 @@ CREATE TABLE IF NOT EXISTS users (
     full_name VARCHAR(100) NOT NULL,
     email VARCHAR(255) NOT NULL UNIQUE,
     password_hash VARCHAR(255) NOT NULL,
-    role ENUM('super_admin', 'admin', 'project_manager', 'member') NOT NULL DEFAULT 'member',
+    role VARCHAR(40) NOT NULL DEFAULT 'member',
+    department VARCHAR(100) NULL,
+    job_title VARCHAR(100) NULL,
+    permission_overrides JSON NULL,
     is_active BOOLEAN NOT NULL DEFAULT TRUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -71,7 +74,8 @@ CREATE TABLE IF NOT EXISTS project_members (
 CREATE TABLE IF NOT EXISTS tasks (
     id INT AUTO_INCREMENT PRIMARY KEY,
     project_id INT NOT NULL,
-    user_id INT NOT NULL,
+    user_id INT NULL,
+    created_by INT NULL,
     name VARCHAR(255) NOT NULL,
     description TEXT,
     priority ENUM('Low', 'Medium', 'High') NOT NULL DEFAULT 'Medium',
@@ -83,6 +87,9 @@ CREATE TABLE IF NOT EXISTS tasks (
         REFERENCES projects(id) ON DELETE CASCADE,
     CONSTRAINT fk_tasks_user FOREIGN KEY (user_id) 
         REFERENCES users(id) ON DELETE CASCADE,
+    CONSTRAINT fk_tasks_creator FOREIGN KEY (created_by)
+        REFERENCES users(id) ON DELETE SET NULL,
+    INDEX idx_tasks_created_by (created_by),
     INDEX idx_tasks_project_id (project_id),
     INDEX idx_tasks_user_id (user_id),
     INDEX idx_tasks_status (status),
