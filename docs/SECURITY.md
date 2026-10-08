@@ -95,7 +95,7 @@ Helmet supplies default security headers and Express identification is disabled.
 
 Login and registration share a 50-request/IP/15-minute limiter with 429 JSON responses. The store is process-local. Run a single API instance for this deployment; a multi-instance rollout needs a shared store and edge limits. TRUST_PROXY accepts explicit IPs/subnets, never true or hop counts. Configure only the actual proxy path and overwrite forwarding headers at the trusted edge.
 
-The prepared Nginx configuration serves SPA fallback, caches hashed assets, applies frontend CSP and proxies /api. It trusts the configured host edge only for X-Real-IP. CSP permits Google Fonts and inline styles used by React/charts; scripts require same origin. The sample proxy assumes /api on the same origin. External API builds require a matching CSP connect-src. HTTPS/HSTS belong on the public edge.
+The prepared Nginx configuration serves SPA fallback, caches hashed assets, applies frontend CSP and proxies /api. It connects to the API over loopback and overwrites X-Forwarded-For with the remote client address. CSP permits Google Fonts and inline styles used by React/charts; scripts require same origin. The sample proxy assumes /api on the same origin. External API builds require a matching CSP connect-src. HTTPS/HSTS belong on the public edge.
 
 See the [Express security guidance](https://expressjs.com/en/advanced/best-practice-security.html) and [proxy trust guidance](https://expressjs.com/en/guide/behind-proxies.html) for the deployment assumptions behind these controls.
 

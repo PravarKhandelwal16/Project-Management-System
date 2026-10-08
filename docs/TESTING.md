@@ -50,4 +50,6 @@ Assignment and reminder functions are mocked before the server/jobs run. Tests v
 
 ## CI
 
-.github/workflows/ci.yml runs against an isolated MySQL 8.4 service, Node 24, coverage, lint/build, Chromium checks and dependency audits. Quality reports are uploaded even on failure. CI secrets shown in the workflow are disposable service credentials, never deployment credentials.
+.github/workflows/ci.yml starts the native MySQL service on Ubuntu 24.04 and creates a dedicated account restricted to the test database namespace, Node 24, coverage, lint/build, Chromium checks and dependency audits. Quality reports are uploaded even on failure. CI secrets shown in the workflow are disposable service credentials, never deployment credentials.
+
+The workflow uses the preinstalled service and disposable runner root credentials documented in the [GitHub Ubuntu 24.04 runner image](https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2404-Readme.md#mysql). Application tests run as pms_test rather than root.

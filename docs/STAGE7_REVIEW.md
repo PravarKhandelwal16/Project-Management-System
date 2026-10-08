@@ -1,6 +1,6 @@
 # Stage 7 verification record
 
-Verified locally on 2026-10-08 with Node 24.17.0, MySQL 8.0.45 and Chromium through Playwright. The prepared CI/container target uses MySQL 8.4; that target has not been executed locally.
+Verified locally on 2026-10-08 with Node 24.17.0, MySQL 8.0.45 and Chromium through Playwright. CI uses native MySQL on Ubuntu 24.04; the workflow has not been executed locally.
 
 ## Results
 
@@ -14,7 +14,7 @@ Verified locally on 2026-10-08 with Node 24.17.0, MySQL 8.0.45 and Chromium thro
 | Full database migrations on disposable test databases | Fresh setup and repeat runs preserve seeded records |
 | Real backend entry-point smoke test, scheduler disabled | /api/health 200, /api/ready 200, unauthenticated /api/projects 401 |
 | OpenAPI/Postman coverage | All 56 registered REST operations match documentation |
-| Documentation links / Compose and CI YAML | Checked/parsed |
+| Documentation links / CI YAML | Checked/parsed |
 | git diff --check | Pass (Windows line-ending notices only) |
 
 The browser suite covers all major pages at 1440x1000, 820x1180 and 390x844. It checks page widths/overflow/errors, the mobile sidebar, auth form validation, calendar whitespace selection and item placement, keyboard confirmation/cancellation, 401 navigation and friendly 403/404/500/network retry states. Screenshots were inspected for the dashboard and mobile calendar; visual checks do not constitute a full accessibility certification.
@@ -33,7 +33,7 @@ Generated coverage/browser artifacts are ignored by Git; rerun documented comman
 
 ## Remaining deployment verification
 
-Docker is unavailable on this workstation. Dockerfiles, Compose and Nginx configuration are prepared, with YAML parsed, but container builds/boot, proxy trust/client-IP behavior, HTTPS certificate/domain, live host configuration and actual CI execution remain staging checks.
+The host environment and Nginx configuration are prepared. Proxy trust/client-IP behavior, HTTPS certificate/domain, live service configuration and actual CI execution remain staging checks.
 
 No real emails were sent by automated tests. Verify SMTP with a sandbox recipient/account on the deployment target. A clean-clone evaluator walkthrough and imported Postman execution remain submission checks.
 

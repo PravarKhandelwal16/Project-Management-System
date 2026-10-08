@@ -15,7 +15,7 @@ Repository quality checks are documented in [Stage 7 review](STAGE7_REVIEW.md). 
 - [x] Safe migration sequence, indexes and daily notification uniqueness.
 - [x] Optional guarded demo data and safe first-owner bootstrap.
 - [x] README/setup, API/OpenAPI/Postman, DATABASE/ER, security, testing and deployment guides.
-- [x] Dockerfiles/Compose/proxy configuration and CI workflow prepared.
+- [x] Host environment/HTTPS proxy configuration and CI workflow prepared.
 
 ## Before handing in
 
@@ -29,7 +29,7 @@ Repository quality checks are documented in [Stage 7 review](STAGE7_REVIEW.md). 
 ## Before production
 
 - [ ] Choose target/domain, secret configuration, certificate and SMTP provider; use independent credentials.
-- [ ] Build/boot containers or configured service in staging. Docker execution was unavailable locally.
+- [ ] Start the configured Node service and static frontend host in staging.
 - [ ] Apply migrations to a restored staging database, then use a dedicated least-privilege runtime account.
 - [ ] Bootstrap the first Super Admin once and remove bootstrap credentials; never seed demo data into production.
 - [ ] Verify HTTPS/CSP/CORS, private service ports and real proxy IP/rate-limit behavior.

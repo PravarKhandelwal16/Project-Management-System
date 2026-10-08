@@ -44,17 +44,16 @@ server/
   scripts/                 Migrations, test runner, safe bootstrap and demo seed
 shared/                    Constants, access catalog and Zod validation
 database/                  Base schema and documented migration sequence
-deployment/                Dockerfiles, Compose and reverse proxy configuration
+deployment/                Host environment example and HTTPS reverse proxy configuration
 docs/                      API/OpenAPI/Postman, testing, deployment and checklist
 ```
 
 ## Prerequisites
 
 - Node.js **24** and npm (use `.nvmrc`).
-- MySQL **8.0+**; CI targets MySQL 8.4.
+- MySQL **8.0+**; CI uses native MySQL 8.0 on Ubuntu 24.04.
 - A database account allowed to create tables for migrations.
 - Tests need a separate account/database namespace with CREATE/DROP privileges restricted to test databases.
-- Optional Docker Engine/Compose for the container deployment path.
 
 ## Installation
 
@@ -156,7 +155,7 @@ APP_TIMEZONE controls the daily deadline schedule; REMINDER_CRON defaults to 08:
 
 ## Deployment
 
-[Deployment guide](docs/DEPLOYMENT.md) covers manual/static hosting and Docker Compose, HTTPS, migration order, least-privilege MySQL, backups, rollback, smoke tests and proxy configuration. Files are prepared; no live deployment is performed by this stage.
+[Deployment guide](docs/DEPLOYMENT.md) covers host/static deployment, HTTPS, migration order, least-privilege MySQL, backups, rollback, smoke tests and proxy configuration. Files are prepared; no live deployment is performed by this stage.
 
 ## Security Notes
 
