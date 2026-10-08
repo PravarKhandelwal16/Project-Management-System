@@ -9,6 +9,7 @@ const {
   VALID_TASK_STATUSES,
   VALID_TASK_PRIORITIES,
 } = require('../utils/validation');
+const notificationService = require('../services/notificationService');
 
 /**
  * Controller for Task CRUD & Assignment Operations
@@ -237,6 +238,10 @@ const createTask = async (req, res, next) => {
           projectId: project.id,
         },
       });
+      const eligibility = await verifyEligibleAssignee(project.id, project.user_id, Number(assigned_to));
+      if (eligibility.user) {
+        await notificationService.notifyTaskAssigned(newTask, project, eligibility.user, false);
+      }
     }
 
     const newTask = await taskModel.getTaskById(taskId);
@@ -332,6 +337,14 @@ const updateTask = async (req, res, next) => {
           projectId: currentTask.project_id,
         },
       });
+
+      if (targetAssignee) {
+        const eligibility = await verifyEligibleAssignee(currentTask.project_id, currentTask.project_owner_id, targetAssignee);
+        const project = await projectModel.getProjectById(currentTask.project_id);
+        if (eligibility.user && project) {
+          await notificationService.notifyTaskAssigned(currentTask, project, eligibility.user, !!currentTask.assigned_to);
+        }
+      }
     }
 
     if (status && status !== currentTask.status) {
@@ -497,6 +510,14 @@ const assignTask = async (req, res, next) => {
         projectId: currentTask.project_id,
       },
     });
+
+    if (targetUserId) {
+      const eligibility = await verifyEligibleAssignee(currentTask.project_id, currentTask.project_owner_id, targetUserId);
+      const project = await projectModel.getProjectById(currentTask.project_id);
+      if (eligibility.user && project) {
+        await notificationService.notifyTaskAssigned(currentTask, project, eligibility.user, !!currentTask.assigned_to);
+      }
+    }
 
     const updated = await taskModel.getTaskById(currentTask.id);
 
