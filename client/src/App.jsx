@@ -15,6 +15,8 @@ import TaskDetails from './pages/TaskDetails';
 import Analytics from './pages/Analytics';
 import CalendarPage from './pages/Calendar';
 import Team from './pages/Team';
+import Notifications from './pages/Notifications';
+import Settings from './pages/Settings';
 
 function App() {
   return (
@@ -116,6 +118,26 @@ function App() {
               <ProtectedRoute>
                 <AppLayout>
                   <Team />
+                </AppLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/notifications"
+            element={
+              <ProtectedRoute>
+                <AppLayout>
+                  <Notifications />
+                </AppLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/settings"
+            element={
+              <ProtectedRoute>
+                <AppLayout>
+                  <Settings />
                 </AppLayout>
               </ProtectedRoute>
             }

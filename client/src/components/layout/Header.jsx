@@ -3,6 +3,7 @@ import { Menu, Search, Bell, Sun, User as UserIcon, LogOut, Settings } from 'luc
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import api from '../../services/api';
+import NotificationDropdown from './NotificationDropdown';
 import './Header.css';
 
 const Header = ({ toggleSidebar }) => {
@@ -143,10 +144,7 @@ const Header = ({ toggleSidebar }) => {
         <button className="header-icon-btn">
           <Sun size={20} />
         </button>
-        <button className="header-icon-btn notification-btn">
-          <Bell size={20} />
-          <span className="notification-badge">3</span>
-        </button>
+        <NotificationDropdown />
         
         <div className="profile-menu-container">
           <div 

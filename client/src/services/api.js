@@ -327,3 +327,35 @@ export default {
   assignTaskApi,
   deleteTaskApi
 };
+
+/* ==========================================================
+ * NOTIFICATIONS API
+ * ========================================================== */
+
+export const getNotificationsApi = async (params = { limit: 50, offset: 0 }) => {
+  const query = new URLSearchParams(params).toString();
+  return apiRequest(`/notifications?${query}`);
+};
+
+export const getUnreadNotificationCountApi = async () => {
+  return apiRequest('/notifications/unread-count');
+};
+
+export const markNotificationReadApi = async (id) => {
+  return apiRequest(`/notifications/${id}/read`, { method: 'PATCH' });
+};
+
+export const markAllNotificationsReadApi = async () => {
+  return apiRequest('/notifications/read-all', { method: 'PATCH' });
+};
+
+export const getNotificationPreferencesApi = async () => {
+  return apiRequest('/notifications/preferences');
+};
+
+export const updateNotificationPreferencesApi = async (data) => {
+  return apiRequest('/notifications/preferences', {
+    method: 'PUT',
+    data,
+  });
+};

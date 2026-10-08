@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { loginSchema } from '@shared/validation/authSchemas.js';
 
 export const Login = () => {
   const navigate = useNavigate();
@@ -39,21 +40,19 @@ export const Login = () => {
   };
 
   const validateForm = () => {
+    const result = loginSchema.safeParse(formData);
+    
+    if (result.success) {
+      setFormErrors({});
+      return true;
+    }
+
     const errors = {};
-    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-
-    if (!formData.email.trim()) {
-      errors.email = 'Email address is required';
-    } else if (!emailRegex.test(formData.email.trim())) {
-      errors.email = 'Please enter a valid email address';
-    }
-
-    if (!formData.password) {
-      errors.password = 'Password is required';
-    }
-
+    result.error.errors.forEach(err => {
+      errors[err.path[0]] = err.message;
+    });
     setFormErrors(errors);
-    return Object.keys(errors).length === 0;
+    return false;
   };
 
   const handleSubmit = async (e) => {

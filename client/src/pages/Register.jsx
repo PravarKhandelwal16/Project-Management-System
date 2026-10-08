@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { registerSchema } from '@shared/validation/authSchemas.js';
 
 export const Register = () => {
   const navigate = useNavigate();
@@ -31,33 +32,23 @@ export const Register = () => {
   };
 
   const validateForm = () => {
+    const payload = {
+      full_name: formData.fullName.trim(),
+      email: formData.email.trim(),
+      password: formData.password
+    };
+
+    const result = registerSchema.safeParse(payload);
     const errors = {};
-    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 
-    // Full name validation
-    if (!formData.fullName.trim()) {
-      errors.fullName = 'Full name is required';
-    } else if (formData.fullName.trim().length < 2) {
-      errors.fullName = 'Full name must be at least 2 characters';
+    if (!result.success) {
+      result.error.errors.forEach(err => {
+        const path = err.path[0];
+        if (path === 'full_name') errors.fullName = err.message;
+        else errors[path] = err.message;
+      });
     }
 
-    // Email validation
-    if (!formData.email.trim()) {
-      errors.email = 'Email address is required';
-    } else if (!emailRegex.test(formData.email.trim())) {
-      errors.email = 'Please enter a valid email address';
-    }
-
-    // Password validation
-    if (!formData.password) {
-      errors.password = 'Password is required';
-    } else if (formData.password.length < 8) {
-      errors.password = 'Password must be at least 8 characters long';
-    } else if (!/[a-zA-Z]/.test(formData.password) || !/[0-9]/.test(formData.password)) {
-      errors.password = 'Password must include both letters and numbers';
-    }
-
-    // Confirm password validation
     if (!formData.confirmPassword) {
       errors.confirmPassword = 'Please confirm your password';
     } else if (formData.password !== formData.confirmPassword) {
