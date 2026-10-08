@@ -69,4 +69,16 @@ router.post('/:id/members', requireProjectAccess('manage'), projectMemberControl
  */
 router.delete('/:id/members/:userId', requireProjectAccess('manage'), projectMemberController.removeMember);
 
+/**
+ * Project Tasks Sub-Routes
+ */
+
+/**
+ * @route   GET /api/projects/:id/tasks
+ * @desc    List tasks belonging to a project
+ * @access  Private (Owner, Member, or Admin)
+ */
+const taskController = require('../controllers/taskController');
+router.get('/:id/tasks', requireProjectAccess('view'), taskController.getProjectTasks);
+
 module.exports = router;

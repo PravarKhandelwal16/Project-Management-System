@@ -1,0 +1,66 @@
+const express = require('express');
+const router = express.Router();
+const authenticateToken = require('../middleware/authMiddleware');
+const { requireTaskAccess } = require('../middleware/rbacMiddleware');
+const taskController = require('../controllers/taskController');
+
+// All task routes require authentication
+router.use(authenticateToken);
+
+/**
+ * @route   GET /api/tasks
+ * @desc    Get all accessible tasks (supports project_id, status, priority, assigned_to, search, sort, pagination)
+ * @access  Private
+ */
+router.get('/', taskController.getTasks);
+
+/**
+ * @route   POST /api/tasks
+ * @desc    Create a new task in a project
+ * @access  Private (Project Manager owner, Super Admin, Admin)
+ */
+router.post('/', taskController.createTask);
+
+/**
+ * @route   GET /api/tasks/:id
+ * @desc    Get task details by ID
+ * @access  Private (Owner, Project Member, Assignee, Admin)
+ */
+router.get('/:id', requireTaskAccess('view'), taskController.getTaskById);
+
+/**
+ * @route   PUT /api/tasks/:id
+ * @desc    Full update of task (name, description, priority, status, due_date, assigned_to)
+ * @access  Private (Project Manager owner, Super Admin, Admin)
+ */
+router.put('/:id', requireTaskAccess('edit'), taskController.updateTask);
+
+/**
+ * @route   PATCH /api/tasks/:id/status
+ * @desc    Update task status only
+ * @access  Private (Project Manager owner, Admin, or Assigned Member)
+ */
+router.patch('/:id/status', requireTaskAccess('status'), taskController.updateStatus);
+
+/**
+ * @route   PATCH /api/tasks/:id/priority
+ * @desc    Update task priority only
+ * @access  Private (Project Manager owner, Admin)
+ */
+router.patch('/:id/priority', requireTaskAccess('edit'), taskController.updatePriority);
+
+/**
+ * @route   PATCH /api/tasks/:id/assign
+ * @desc    Assign or reassign task
+ * @access  Private (Project Manager owner, Admin)
+ */
+router.patch('/:id/assign', requireTaskAccess('edit'), taskController.assignTask);
+
+/**
+ * @route   DELETE /api/tasks/:id
+ * @desc    Delete task
+ * @access  Private (Project Manager owner, Admin)
+ */
+router.delete('/:id', requireTaskAccess('delete'), taskController.deleteTask);
+
+module.exports = router;
