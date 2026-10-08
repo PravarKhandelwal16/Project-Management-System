@@ -88,6 +88,8 @@ Deploy, then open `https://<your-api>.onrender.com/api/health` and `/api/ready`.
 
 ## 4. Point web/mobile to the API
 
+For the chosen Vercel frontend, follow [Vercel setup](VERCEL.md). Create it from the repository root, use its stable production domain for FRONTEND_URL, and set VITE_API_URL after the Render API URL is available.
+
 Set these public variables to the Render **API** URL, including /api:
 
 ```dotenv
