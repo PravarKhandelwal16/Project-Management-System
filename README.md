@@ -2,6 +2,8 @@
 
 A full-stack web application designed for project and task tracking, team management, and status analytics.
 
+Dashboard, Projects, Tasks, Analytics and Calendar now share a planning workflow with task list/board views, actionable forms, project health and personal in-app reminders. See [Planning workflows and migration](docs/PLANNING.md). Existing installations must also run `npm --prefix server run migrate:planning`.
+
 The current release adds eight operational roles, editable role policies and individual permissions, account/profile management, project team rosters and workloads, and searchable audit history. See [Roles, permissions and management](docs/ACCESS_MANAGEMENT.md) for migration steps, defaults and workflows. Existing installations must run `npm --prefix server run migrate:access` before starting this version.
 
 ---

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { apiRequest, addProjectMemberApi, removeProjectMemberApi } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import catalog from '@shared/access.json';
@@ -8,6 +8,8 @@ import './Management.css';
 const roleLabel = key => catalog.roles.find(role => role.key === key)?.label || key;
 export default function Team() {
   const { hasPermission } = useAuth();
+  const [teamQuery] = useSearchParams();
+  const preferredProject = teamQuery.get('project_id');
   const requestSequence = useRef(0);
   const [projects, setProjects] = useState([]);
   const [projectId, setProjectId] = useState('');
@@ -27,9 +29,9 @@ export default function Team() {
   const [selectedId, setSelectedId] = useState('');
   useEffect(() => {
     let active = true;
-    apiRequest('/projects').then(response => { if (active) { setProjects(response.data); setProjectId(response.data[0]?.id.toString() || ''); } }).catch(err => { if (active) setError(err.message); }).finally(() => { if (active) setLoading(false); });
+    apiRequest('/projects').then(response => { if (active) { setProjects(response.data); setProjectId(response.data.find(item => item.id.toString() === preferredProject)?.id.toString() || response.data[0]?.id.toString() || ''); } }).catch(err => { if (active) setError(err.message); }).finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
-  }, []);
+  }, [preferredProject]);
   const loadRoster = useCallback(async () => {
     if (!projectId) return;
     const sequence = ++requestSequence.current;

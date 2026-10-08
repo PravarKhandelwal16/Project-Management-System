@@ -19,7 +19,7 @@ export default function ManagementDialog({ title, onClose, busy, compact, childr
     }
   }}>
     <section ref={ref} className={'management-dialog ' + (compact ? 'compact' : '')} role="dialog" aria-modal="true" aria-labelledby="management-dialog-title">
-      <header><h2 id="management-dialog-title">{title}</h2><button aria-label="Close dialog" disabled={busy} onClick={onClose}>?</button></header>
+      <header><h2 id="management-dialog-title">{title}</h2><button aria-label="Close dialog" disabled={busy} onClick={onClose}>&times;</button></header>
       {children}
     </section>
   </div>;

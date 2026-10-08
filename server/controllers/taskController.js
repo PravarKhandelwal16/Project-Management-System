@@ -276,7 +276,7 @@ const updateTask = async (req, res, next) => {
     if (status !== undefined && status !== currentTask.status && !hasPermission(req.user, 'tasks.status') && !(currentTask.assigned_to === req.user.id && hasPermission(req.user, 'tasks.status_assigned'))) return res.status(403).json({ success: false, message: 'Task status permission is required.' });
     // Validate assignee if changed
     const targetAssignee = assigned_to !== undefined ? (assigned_to ? Number(assigned_to) : null) : currentTask.assigned_to;
-    if (targetAssignee && targetAssignee !== currentTask.assigned_to) {
+    if (assigned_to !== undefined && assigned_to !== null && assigned_to !== '' && targetAssignee !== currentTask.assigned_to) {
       const eligibility = await verifyEligibleAssignee(
         currentTask.project_id,
         currentTask.project_owner_id,
@@ -389,6 +389,7 @@ const updateStatus = async (req, res, next) => {
       });
     }
 
+    if (status === currentTask.status) return res.json({ success: true, data: currentTask });
     await taskModel.updateTaskStatus(currentTask.id, status);
 
     await logAuditEvent({

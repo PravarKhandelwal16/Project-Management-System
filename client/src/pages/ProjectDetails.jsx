@@ -1,3 +1,4 @@
+import ProjectWork from '../components/planning/ProjectWork';
 import accessCatalog from '@shared/access.json';
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
@@ -297,6 +298,8 @@ export const ProjectDetails = () => {
             </div>
           </div>
         </div>
+
+        <ProjectWork project={project} />
 
         {/* Project Members Section */}
         <section className="architecture-card">

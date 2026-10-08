@@ -9,7 +9,8 @@
     "test:email": "node scripts/testEmail.js",
     "test:reminders": "node scripts/testReminders.js",
     "migrate:access": "node scripts/migrateAccess.js",
-    "test": "node --test tests/*.test.js"
+    "test": "node --test tests/*.test.js",
+    "migrate:planning": "node scripts/migratePlanning.js"
   },
   "keywords": [],
   "author": "",

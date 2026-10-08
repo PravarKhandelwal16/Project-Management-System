@@ -96,6 +96,9 @@ const getAccessibleProjects = async (user, { search = '', status = '', sortBy = 
       u.full_name as owner_name,
       u.email as owner_email,
       (SELECT COUNT(*) FROM project_members pm WHERE pm.project_id = p.id) as member_count,
+      (SELECT COUNT(*) FROM tasks t WHERE t.project_id = p.id) AS total_tasks,
+      (SELECT COUNT(*) FROM tasks t WHERE t.project_id = p.id AND t.status = 'Completed') AS completed_tasks,
+      (SELECT COUNT(*) FROM tasks t WHERE t.project_id = p.id AND t.status != 'Completed' AND t.due_date < CURDATE()) AS overdue_tasks,
       CASE WHEN p.user_id = ? THEN 1 ELSE 0 END as is_owner,
       ? as can_manage
     FROM projects p
@@ -123,7 +126,11 @@ const getAccessibleProjects = async (user, { search = '', status = '', sortBy = 
   sql += ` ORDER BY p.${cleanSortBy} ${cleanSortOrder}`;
 
   const [rows] = await pool.execute(sql, params);
-  return rows;
+  return rows.map(project => {
+    const allowed = hasPermission(user, 'tasks.view');
+    return { ...project, total_tasks: allowed ? Number(project.total_tasks) : null, completed_tasks: allowed ? Number(project.completed_tasks) : null, overdue_tasks: allowed ? Number(project.overdue_tasks) : null,
+      progress: allowed ? (project.total_tasks ? Math.round(project.completed_tasks / project.total_tasks * 100) : 0) : null };
+  });
 };
 
 /**

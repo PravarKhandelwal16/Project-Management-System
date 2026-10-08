@@ -27,7 +27,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
     { name: 'Dashboard', path: '/dashboard', icon: <LayoutDashboard size={20} />, permission: null },
     { name: 'Projects', path: '/projects', icon: <FolderKanban size={20} />, permission: 'projects.view' },
     { name: 'Tasks', path: '/tasks', icon: <CheckSquare size={20} />, permission: 'tasks.view' },
-    { name: 'Calendar', path: '/calendar', icon: <Calendar size={20} />, permission: 'tasks.view' },
+    { name: 'Calendar', path: '/calendar', icon: <Calendar size={20} />, permission: null },
     { name: 'Analytics', path: '/analytics', icon: <BarChart2 size={20} />, permission: 'analytics.view' },
     { name: 'Team', path: '/team', icon: <Users size={20} />, permission: 'team.view' },
   ];

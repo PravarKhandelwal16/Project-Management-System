@@ -95,7 +95,7 @@ function App() {
           <Route
             path="/calendar"
             element={
-              <ProtectedRoute permission="tasks.view">
+              <ProtectedRoute>
                 <AppLayout>
                   <CalendarPage />
                 </AppLayout>
@@ -162,6 +162,9 @@ function App() {
               </ProtectedRoute>
             }
           />
+
+          <Route path="/projects/new" element={<Navigate to="/projects?create=1" replace />} />
+          <Route path="/tasks/new" element={<Navigate to="/tasks?create=1" replace />} />
 
           {/* Fallback & Root Redirections */}
           <Route path="/" element={<Navigate to="/dashboard" replace />} />

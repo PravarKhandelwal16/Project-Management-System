@@ -1,53 +1,30 @@
-import { useState, useEffect } from 'react';
-import { getDashboardDataApi } from '../services/api';
-import ProjectStatusChart from '../components/dashboard/ProjectStatusChart';
-import TaskStatusChart from '../components/dashboard/TaskStatusChart';
-import TaskActivityChart from '../components/dashboard/TaskActivityChart';
-import WeeklyProductivityChart from '../components/dashboard/WeeklyProductivityChart';
-
-const Analytics = () => {
-  const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    let isMounted = true;
-    const loadData = async () => {
-      setLoading(true);
-      try {
-        const res = await getDashboardDataApi();
-        if (isMounted && res.success) {
-          setData(res.data);
-        }
-      } catch (err) {
-        console.error(err);
-      } finally {
-        if (isMounted) setLoading(false);
-      }
-    };
-    loadData();
-    return () => { isMounted = false; };
-  }, []);
-
-  if (loading) return <div className="loading-state">Loading analytics...</div>;
-  if (!data) return <div className="empty-state">Failed to load analytics data.</div>;
-
-  return (
-    <div className="page-container">
-      <header className="page-header" style={{ marginBottom: '1.5rem' }}>
-        <h1 className="page-title" style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: '0.25rem' }}>Analytics</h1>
-        <p className="page-subtitle" style={{ color: 'var(--text-muted)' }}>Detailed charts and metrics for your projects.</p>
-      </header>
-
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '1.5rem' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '1.5rem' }}>
-          <ProjectStatusChart data={data.projectStatus} />
-          <TaskStatusChart data={data.taskStatus} />
-        </div>
-        <TaskActivityChart data={data.taskActivity} />
-        <WeeklyProductivityChart data={data.weeklyProductivity} />
-      </div>
-    </div>
-  );
-};
-
-export default Analytics;
+import { useState } from 'react';
+import { Link } from 'react-router-dom';
+import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
+import useRemote from '../hooks/useRemote';
+import { PageHeader, Metrics, LoadState, Progress, Badge } from '../components/planning/PlanningUI';
+import ActivityChart from '../components/planning/ActivityChart';
+import { zone, prettyDate, downloadCsv } from '../utils/planning';
+const colors=['#94a3b8','#f59e0b','#10b981'];
+export default function Analytics(){
+  const [projectId,setProjectId]=useState(''),[days,setDays]=useState('30');
+  const projects=useRemote('/projects');
+  const report=useRemote('/analytics?'+new URLSearchParams({project_id:projectId,days,tz:zone}));
+  const data=report.data,summary=data?.summary||{};
+  const exportReport=()=>downloadCsv('project-health.csv',[
+    ['Project','Owner','Status','Target date','Tasks','Completed','Overdue','Completion %'],
+    ...data.projects.map(project=>[project.name,project.owner_name,project.status,project.end_date,project.total_tasks,project.completed_tasks,project.overdue_tasks,project.progress])
+  ]);
+  return <div className="planning-page"><PageHeader eyebrow="REPORTING" title="Analytics" description="Understand delivery health, workload and the pace of project work."><button className="management-button secondary" disabled={!data||report.loading} onClick={exportReport}>Export project report</button></PageHeader>
+    <div className="management-toolbar"><label>Project scope<select value={projectId} onChange={event=>setProjectId(event.target.value)}><option value="">All accessible projects</option>{(projects.data||[]).map(project=><option key={project.id} value={project.id}>{project.name}</option>)}</select></label><label>Activity range<select value={days} onChange={event=>setDays(event.target.value)}><option value="7">Last 7 days</option><option value="30">Last 30 days</option><option value="90">Last 90 days</option></select></label><button className="management-button secondary" onClick={report.reload}>Refresh</button><p className="planning-muted">Health and workload show current totals. The date range applies to activity.</p></div>
+    {projects.error&&<div className="management-notice error" role="alert">{projects.error}</div>}
+    <LoadState loading={report.loading} error={report.error} onRetry={report.reload}>{data&&<>
+      <Metrics items={[{label:'Task completion',value:summary.completionRate+'%',note:summary.completedTasks+' of '+summary.totalTasks+' tasks',tone:'success'},{label:'Open work',value:summary.pendingTasks+summary.inProgressTasks,note:summary.inProgressTasks+' in progress'},{label:'Overdue tasks',value:summary.overdueTasks,note:'Not yet completed',tone:'danger'},{label:'Unassigned tasks',value:summary.unassignedTasks,note:'Open tasks needing ownership'}]}/>
+      <section className="planning-panel" style={{marginBottom:22}}><div className="planning-panel-header"><h2>Delivery activity</h2><span className="planning-muted">Last {days} days</span></div><ActivityChart data={data.taskActivity}/><p className="planning-muted">Daily counts of tasks created and unique tasks completed. Reopened work remains visible in current status totals.</p></section>
+      <div className="planning-two"><section className="planning-panel"><h2>Task status</h2>{summary.totalTasks?<div className="planning-chart"><ResponsiveContainer width="100%" height="100%"><PieChart><Pie data={data.taskStatus} dataKey="count" nameKey="status" innerRadius={62} outerRadius={90} paddingAngle={3}>{data.taskStatus.map((row,index)=><Cell key={row.status} fill={colors[index]}/>)}</Pie><Tooltip/></PieChart></ResponsiveContainer></div>:<p className="planning-muted" style={{padding:30}}>No tasks in this scope.</p>}<div className="planning-inline">{data.taskStatus.map(row=><span className="planning-muted" key={row.status}>{row.status}: <strong>{row.count}</strong></span>)}</div></section>
+      <section className="planning-panel"><h2>Task priorities</h2><div className="planning-chart"><ResponsiveContainer width="100%" height="100%"><BarChart data={data.priorities} margin={{left:-25,right:10}}><CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0"/><XAxis dataKey="priority" tickLine={false} axisLine={false} fontSize={11}/><YAxis allowDecimals={false} tickLine={false} axisLine={false} fontSize={11}/><Tooltip/><Bar dataKey="count" name="Tasks" fill="#2563eb" radius={[5,5,0,0]}/></BarChart></ResponsiveContainer></div><div className="planning-inline">{data.priorities.map(row=><span className="planning-muted" key={row.priority}>{row.priority}: <strong>{row.count}</strong></span>)}</div></section></div>
+      <section className="planning-panel" style={{marginBottom:22}}><div className="planning-panel-header"><h2>Project health</h2><span className="planning-muted">{data.projects.length} projects</span></div>{!data.projects.length?<p className="planning-muted">No projects available in this scope.</p>:<div className="management-table-wrap"><table className="management-table"><thead><tr><th>Project & owner</th><th>Status</th><th>Task completion</th><th>Open tasks</th><th>Overdue</th><th>Target date</th></tr></thead><tbody>{data.projects.map(project=><tr key={project.id}><td><Link className="planning-item-title" to={'/projects/'+project.id}>{project.name}</Link><small>{project.owner_name}</small></td><td><Badge value={project.status}/></td><td><Progress value={project.progress}/></td><td>{project.total_tasks-project.completed_tasks}</td><td>{project.overdue_tasks>0?<Badge value={project.overdue_tasks+' overdue'}/>:0}</td><td>{prettyDate(project.end_date)}</td></tr>)}</tbody></table></div>}</section>
+      <section className="planning-panel"><div className="planning-panel-header"><h2>Workload distribution</h2><span className="planning-muted">Current assignment counts</span></div>{!data.workload.length?<p className="planning-muted">Assigned and unassigned work will appear here.</p>:<div className="management-table-wrap"><table className="management-table"><thead><tr><th>Person</th><th>Total assigned</th><th>Open</th><th>Completed</th><th>Overdue</th></tr></thead><tbody>{data.workload.map(row=><tr key={row.id||'unassigned'}><td><strong>{row.name}</strong></td><td>{row.total}</td><td>{row.open}</td><td>{row.completed}</td><td>{row.overdue}</td></tr>)}</tbody></table></div>}</section>
+    </>}</LoadState>
+  </div>;
+}

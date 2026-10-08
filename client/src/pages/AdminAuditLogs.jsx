@@ -27,7 +27,7 @@ export default function AdminAuditLogs() {
     <header className="management-heading"><div><h1>Audit history</h1><p>Trace account access, permission changes and project activity.</p></div><button className="management-button secondary" disabled={loading || !!error || !result.data.length} onClick={exportPage}>Export this page</button></header>
     <form className="management-toolbar" onSubmit={event => { event.preventDefault(); setQuery({ ...draft, page: 1 }); }}>
       <input type="search" name="search" aria-label="Search audit events" placeholder="Search actor, action, resource ID or details?" value={draft.search} onChange={field} />
-      <select name="resource_type" aria-label="Resource type" value={draft.resource_type} onChange={field}><option value="">All resources</option>{['USER','ROLE','PROJECT','TASK','ACCESS'].map(value => <option key={value} value={value}>{humanize(value)}</option>)}</select>
+      <select name="resource_type" aria-label="Resource type" value={draft.resource_type} onChange={field}><option value="">All resources</option>{['USER','ROLE','PROJECT','TASK','REMINDER','ACCESS'].map(value => <option key={value} value={value}>{humanize(value)}</option>)}</select>
       <select name="action" aria-label="Event action" value={draft.action} onChange={field}><option value="">All actions</option>{result.actions.map(value => <option key={value} value={value}>{humanize(value)}</option>)}</select>
       <label>Actor ID<input type="number" name="user_id" min="1" step="1" placeholder="Any actor" value={draft.user_id} onChange={field} /></label>
       <label>From<input type="date" name="from" value={draft.from} onChange={field} max={draft.to || undefined} /></label>

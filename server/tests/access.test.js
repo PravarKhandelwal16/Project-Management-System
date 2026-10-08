@@ -9,6 +9,7 @@ process.env.DB_NAME = database;
 process.env.JWT_SECRET = 'isolated-test-secret';
 const { pool } = require('../config/db');
 const { migrate } = require('../scripts/migrateAccess');
+const { migratePlanning } = require('../scripts/migratePlanning');
 const { catalog, resolveAccess, canManageAccount, validatePermissions } = require('../services/accessService');
 const { redact } = require('../models/auditModel');
 const jwt = require('jsonwebtoken');
@@ -28,6 +29,7 @@ before(async () => {
   await connection.query('ALTER TABLE tasks MODIFY user_id INT NULL');
   await connection.query(fs.readFileSync(path.join(__dirname, '../../database/migration_stage6.sql'), 'utf8'));
   await migrate(); await migrate();
+  await migratePlanning(); await migratePlanning();
   for (const role of catalog.roles) {
     const [result] = await pool.execute('INSERT INTO users (full_name,email,password_hash,role) VALUES (?,?,?,?)', [role.label, role.key + '@isolated.test', 'not-used', role.key]);
     ids[role.key] = result.insertId;
@@ -157,4 +159,92 @@ test('concurrent super-admin deactivations preserve an active platform owner', a
   assert.ok(results.some(item=>[403,409].includes(item.status)));
   const [rows] = await pool.query("SELECT COUNT(*) AS count FROM users WHERE role = 'super_admin' AND is_active = 1");
   assert.equal(rows[0].count,1);
+});
+
+test('planning reports respect project scope, reporting access and hidden task totals', async () => {
+  const report = await request('project_manager','/analytics?days=30&tz=Asia%2FKolkata');
+  assert.equal(report.status,200); assert.equal(report.data.data.projects.length,1);
+  assert.equal(report.data.data.taskActivity.length,30);
+  assert.equal(report.data.data.summary.totalTasks,3);
+  assert.equal(report.data.data.workload.reduce((sum,row)=>sum+row.total,0),3);
+  assert.equal((await request('project_manager','/analytics?project_id=2')).status,403);
+  assert.equal((await request('member','/analytics')).status,403);
+  assert.equal((await request('admin','/analytics?days=10')).status,400);
+  assert.equal((await request('admin','/analytics?tz=Invalid%2FZone')).status,400);
+  assert.equal((await request('admin','/admin/users/'+ids.viewer+'/permissions','PUT',{overrides:{'tasks.view':false}})).status,200);
+  const hidden=await request('viewer','/dashboard');
+  assert.equal(hidden.status,200);assert.equal(hidden.data.data.summary.totalTasks,0);
+  assert.equal(hidden.data.data.projects[0].progress,null);
+  assert.equal((await request('viewer','/projects')).data.data[0].total_tasks,null);
+  assert.equal((await request('viewer','/analytics')).status,403);
+  assert.equal((await request('admin','/admin/users/'+ids.viewer+'/permissions','PUT',{overrides:null})).status,200);
+});
+test('personal reminders validate time zones, remain private and support edit/dismiss/delete', async () => {
+  const instant=new Date(Date.now()+3600000);
+  const local=new Date(instant.getTime()+330*60000).toISOString().slice(0,19)+'+05:30';
+  const created=await request('member','/reminders','POST',{title:'Personal follow-up',notes:'Review the brief',remind_at:local});
+  assert.equal(created.status,201);
+  assert.equal(created.data.data.remind_at,instant.toISOString().slice(0,19)+'Z');
+  const id=created.data.data.id;
+  assert.equal((await request('admin','/reminders')).data.data.length,0);
+  assert.equal((await request('admin','/reminders/'+id,'PUT',{status:'dismissed'})).status,404);
+  assert.equal((await request('admin','/reminders/'+id,'DELETE')).status,404);
+  assert.equal((await request('member','/reminders','POST',{title:'Past',remind_at:new Date(Date.now()-60000).toISOString()})).status,400);
+  assert.equal((await request('member','/reminders','POST',{title:'No timezone',remind_at:'2029-01-01T09:00'})).status,400);
+  const [restricted]=await pool.execute("INSERT INTO tasks (project_id,user_id,created_by,name) VALUES (2,?,?,'Private work')",[ids.admin,ids.admin]);
+  assert.equal((await request('member','/reminders','POST',{title:'Forbidden link',task_id:restricted.insertId,remind_at:instant.toISOString()})).status,403);
+  assert.equal((await request('member','/reminders/'+id,'PUT',{title:'Updated follow-up',remind_at:instant.toISOString()})).status,200);
+  assert.equal((await request('member','/reminders/'+id,'PUT',{status:'dismissed'})).data.data.status,'dismissed');
+  assert.equal((await request('member','/reminders/'+id,'DELETE')).status,200);
+  assert.equal((await request('member','/reminders')).data.data.length,0);
+});
+test('concurrent reminder delivery creates one notification and skips completed or inaccessible tasks', async () => {
+  const {dispatchPersonalReminders}=require('../jobs/personalReminderJob');
+  const future=new Date(Date.now()+3600000).toISOString();
+  const personal=await request('member','/reminders','POST',{title:'Deliver once',remind_at:future});
+  const completed=await request('member','/reminders','POST',{title:'Completed task',task_id:1,remind_at:future});
+  const revoked=await request('viewer','/reminders','POST',{title:'Revoked task access',task_id:2,remind_at:future});
+  assert.equal(personal.status,201);assert.equal(completed.status,201);assert.equal(revoked.status,201);
+  await request('admin','/admin/users/'+ids.viewer+'/permissions','PUT',{overrides:{'tasks.view':false}});
+  await pool.query("UPDATE reminders SET remind_at = UTC_TIMESTAMP() - INTERVAL 1 MINUTE WHERE status = 'scheduled'");
+  const counts=await Promise.all([dispatchPersonalReminders(),dispatchPersonalReminders(),dispatchPersonalReminders()]);
+  assert.equal(counts.reduce((sum,count)=>sum+count,0),1);
+  const [notifications]=await pool.query("SELECT * FROM notifications WHERE type = 'PERSONAL_REMINDER'");
+  assert.equal(notifications.length,1);assert.equal(notifications[0].title,'Deliver once');
+  const list=await request('member','/reminders');
+  assert.equal(list.data.data.find(item=>item.id===personal.data.data.id).status,'sent');
+  assert.equal(list.data.data.find(item=>item.id===completed.data.data.id).status,'dismissed');
+  assert.equal((await request('viewer','/reminders')).data.data[0].status,'dismissed');
+  assert.equal(await dispatchPersonalReminders(),0);
+  await request('admin','/admin/users/'+ids.viewer+'/permissions','PUT',{overrides:null});
+});
+
+test('activity trends use the viewer time zone and deduplicate completion events', async () => {
+  const {todayInZone}=require('../services/reportService');
+  const zone='Asia/Kolkata',today=todayInZone(zone);
+  const instant=Date.parse(today+'T00:00:00Z')-5*3600000;
+  const indiaDay=todayInZone(zone,new Date(instant));
+  const americaDay=todayInZone('America/Los_Angeles',new Date(instant));
+  const beforeIndia=(await request('project_manager','/analytics?days=7&tz=Asia%2FKolkata')).data.data;
+  const beforeAmerica=(await request('project_manager','/analytics?days=7&tz=America%2FLos_Angeles')).data.data;
+  const [task]=await pool.execute("INSERT INTO tasks (project_id,created_by,name) VALUES (1,?,'Boundary task')",[ids.project_manager]);
+  for(let offset=0;offset<2;offset++) await pool.execute("INSERT INTO audit_logs (user_id,action,resource_type,resource_id,created_at) VALUES (?,'TASK_COMPLETED','TASK',?,FROM_UNIXTIME(?))",[ids.project_manager,task.insertId,instant/1000+offset]);
+  const afterIndia=(await request('project_manager','/analytics?days=7&tz=Asia%2FKolkata')).data.data;
+  const afterAmerica=(await request('project_manager','/analytics?days=7&tz=America%2FLos_Angeles')).data.data;
+  assert.equal(afterIndia.taskActivity.find(day=>day.date===indiaDay).completed,beforeIndia.taskActivity.find(day=>day.date===indiaDay).completed+1);
+  assert.equal(afterAmerica.taskActivity.find(day=>day.date===americaDay).completed,beforeAmerica.taskActivity.find(day=>day.date===americaDay).completed+1);
+});
+test('inactive accounts do not receive personal notifications until reactivated', async () => {
+  const {dispatchPersonalReminders}=require('../jobs/personalReminderJob');
+  const created=await request('viewer','/reminders','POST',{title:'Paused while inactive',notes:'Private reminder content',remind_at:new Date(Date.now()+3600000).toISOString()});
+  assert.equal(created.status,201);
+  const [audits]=await pool.execute("SELECT details FROM audit_logs WHERE action = 'REMINDER_CREATED' AND resource_id = ?",[created.data.data.id]);
+  assert.equal(audits[0].details.includes('Private reminder content'),false);
+  assert.equal(audits[0].details.includes('Paused while inactive'),false);
+  await pool.execute('UPDATE users SET is_active = 0 WHERE id = ?',[ids.viewer]);
+  await pool.execute('UPDATE reminders SET remind_at = UTC_TIMESTAMP() - INTERVAL 1 MINUTE WHERE id = ?',[created.data.data.id]);
+  assert.equal(await dispatchPersonalReminders(),0);
+  await pool.execute('UPDATE users SET is_active = 1 WHERE id = ?',[ids.viewer]);
+  assert.equal(await dispatchPersonalReminders(),1);
+  assert.equal((await request('viewer','/reminders')).data.data.find(reminder=>reminder.id===created.data.data.id).status,'sent');
 });

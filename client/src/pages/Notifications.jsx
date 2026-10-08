@@ -59,6 +59,8 @@ const Notifications = () => {
     // Navigate based on resource
     if (notif.resource_type === 'TASK' && notif.resource_id) {
       navigate(`/tasks/${notif.resource_id}`);
+    } else if (notif.resource_type === 'REMINDER') {
+      navigate('/calendar');
     } else if (notif.resource_type === 'PROJECT' && notif.resource_id) {
       navigate(`/projects/${notif.resource_id}`);
     }
