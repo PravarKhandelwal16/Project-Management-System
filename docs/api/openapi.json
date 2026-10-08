@@ -2350,6 +2350,9 @@
                   },
                   "browser_due_tomorrow": {
                     "type": "boolean"
+                  },
+                  "push_due_tomorrow": {
+                    "type": "boolean"
                   }
                 }
               },
@@ -2361,7 +2364,8 @@
                 "web_due_tomorrow": true,
                 "web_overdue": true,
                 "browser_task_assigned": false,
-                "browser_due_tomorrow": false
+                "browser_due_tomorrow": false,
+                "push_due_tomorrow": false
               }
             }
           }
@@ -4004,6 +4008,149 @@
           },
           "500": {
             "description": "Safe internal error"
+          }
+        }
+      }
+    },
+    "/notifications/push-devices": {
+      "post": {
+        "tags": [
+          "Notifications"
+        ],
+        "summary": "Register or renew current user mobile push device",
+        "description": "Requires an active authenticated account.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [],
+        "x-required-permissions": [
+          "authenticated"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success; see API.md response envelopes"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Missing/invalid/expired token"
+          },
+          "403": {
+            "description": "Permission, scope or origin denied"
+          },
+          "404": {
+            "description": "Resource not found"
+          },
+          "409": {
+            "description": "Duplicate, protected state or concurrent update"
+          },
+          "429": {
+            "description": "Authentication rate limit"
+          },
+          "500": {
+            "description": "Safe internal error"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "token": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "pattern": "^(ExponentPushToken|ExpoPushToken)\\[[A-Za-z0-9_-]+\\]$"
+                  },
+                  "platform": {
+                    "type": "string",
+                    "enum": [
+                      "android",
+                      "ios"
+                    ]
+                  }
+                },
+                "required": [
+                  "token",
+                  "platform"
+                ]
+              },
+              "example": {
+                "token": "ExpoPushToken[example-device]",
+                "platform": "android"
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Notifications"
+        ],
+        "summary": "Remove current user mobile push device",
+        "description": "Requires an active authenticated account.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [],
+        "x-required-permissions": [
+          "authenticated"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success; see API.md response envelopes"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Missing/invalid/expired token"
+          },
+          "403": {
+            "description": "Permission, scope or origin denied"
+          },
+          "404": {
+            "description": "Resource not found"
+          },
+          "409": {
+            "description": "Duplicate, protected state or concurrent update"
+          },
+          "429": {
+            "description": "Authentication rate limit"
+          },
+          "500": {
+            "description": "Safe internal error"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "token": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "pattern": "^(ExponentPushToken|ExpoPushToken)\\[[A-Za-z0-9_-]+\\]$"
+                  }
+                },
+                "required": [
+                  "token"
+                ]
+              },
+              "example": {
+                "token": "ExpoPushToken[example-device]"
+              }
+            }
           }
         }
       }

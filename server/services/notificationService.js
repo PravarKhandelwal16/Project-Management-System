@@ -23,7 +23,7 @@ const updatePreferences = async (userId, data) => {
   await ensurePreferences(userId);
   const updates = [];
   const params = [];
-  const allowed=['email_task_assigned','email_due_tomorrow','email_overdue','web_task_assigned','web_due_tomorrow','web_overdue','browser_task_assigned','browser_due_tomorrow'];
+  const allowed=['email_task_assigned','email_due_tomorrow','email_overdue','web_task_assigned','web_due_tomorrow','web_overdue','browser_task_assigned','browser_due_tomorrow','push_due_tomorrow'];
   for (const [key, value] of Object.entries(data)) {
     if(!allowed.includes(key)||typeof value!=='boolean')throw Object.assign(new Error('Invalid notification preference.'),{statusCode:400});
     updates.push(`${key} = ?`);

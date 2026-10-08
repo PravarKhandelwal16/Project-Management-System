@@ -21,7 +21,7 @@ function validateEnvironment(env=process.env){
   }
   const proxy=env.TRUST_PROXY||'';
   if(proxy&&!proxy.split(',').every(item=>item.trim()==='loopback'||/^([\da-f:.]+)(\/\d{1,3})?$/i.test(item.trim())&&require('node:net').isIP(item.trim().split('/')[0])))problems.push('TRUST_PROXY must list trusted IPs/subnets or loopback; never true or a hop count');
-  for(const key of ['SMTP_SECURE','SMTP_REQUIRE_TLS','SCHEDULER_ENABLED','DB_SSL'])if(env[key]&&!['true','false'].includes(env[key]))problems.push(key+' must be true or false');
+  for(const key of ['SMTP_SECURE','SMTP_REQUIRE_TLS','SCHEDULER_ENABLED','DB_SSL','PUSH_ENABLED'])if(env[key]&&!['true','false'].includes(env[key]))problems.push(key+' must be true or false');
   if(env.SMTP_HOST){integer('SMTP_PORT',587);if(production&&!env.SMTP_FROM)problems.push('SMTP_FROM is required when email is enabled');if(production&&env.SMTP_REQUIRE_TLS==='false')problems.push('SMTP_REQUIRE_TLS cannot be disabled in production');}
   if(problems.length)throw new Error('Invalid environment: '+problems.join('; '));
   return {port,dbPort,poolSize,production,expires,timeZone,trustProxy:proxy?proxy.split(',').map(item=>item.trim()):false};

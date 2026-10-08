@@ -14,6 +14,7 @@ async function runReminders(){
     if(!hasPermission(user,'tasks.view')||!hasPermission(user,'projects.view')||!await projectInScope(user,{id:task.project_id,user_id:task.project_owner_id}))continue;
     const prefs=await service.ensurePreferences(user.id);
     const due=type==='TASK_DUE_TOMORROW',project={id:task.project_id,name:task.project_name};
+    if(due&&prefs.push_due_tomorrow)processed+=await require('../services/mobilePushService').sendDueTomorrow(user,task,today);
     for(const channel of ['WEB','EMAIL']){
       if(!prefs[(channel==='WEB'?'web_':'email_')+(due?'due_tomorrow':'overdue')])continue;
       const key=dailyNotificationKey(today,user.id,task.id,type,channel);

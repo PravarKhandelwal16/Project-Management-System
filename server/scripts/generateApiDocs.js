@@ -4,6 +4,8 @@ const paths={},groups=new Map();
 const security=[{bearerAuth:[]}];
 const type=(key,value,url)=>{
   if(['id','user_id','project_id','assigned_to','task_id','version'].includes(key))return {type:'integer',minimum:1,nullable:['assigned_to','task_id'].includes(key)};
+  if(key==='token'&&url==='/notifications/push-devices')return {type:'string',maxLength:255,pattern:'^(ExponentPushToken|ExpoPushToken)\\[[A-Za-z0-9_-]+\\]$'};
+  if(key==='platform')return {type:'string',enum:['android','ios']};
   if(key==='role')return {type:'string',enum:catalog.roles.map(r=>r.key)};
   if(key==='permissions')return {type:'array',items:{type:'string',enum:catalog.permissions.map(p=>p.key)}};
   if(key==='overrides')return {type:'object',additionalProperties:{type:'boolean'},nullable:true};
@@ -25,6 +27,7 @@ function bodySchema(method,url,body){
   if(method==='PUT'&&url==='/reminders/{id}')fields={...exampleFor('/reminders'),status:'dismissed'};
   if(method==='POST')required=url==='/auth/login'?['email','password']:url==='/auth/register'?['full_name','email','password']:url==='/projects'?['name']:url==='/tasks'?['project_id','name']:url==='/admin/users'?['full_name','email','password']:url.endsWith('/members')?['user_id']:url==='/reminders'?['title','remind_at']:url==='/calendar/events'?['title','event_date']:[];
   if(method==='PATCH')required=Object.keys(body);
+  if(url==='/notifications/push-devices')required=method==='POST'?['token','platform']:['token'];
   if(method==='PUT'&&url==='/calendar/events/{id}')required=['title','event_date'];
   if(method==='PUT'&&url==='/calendar/colours')required=['key','colour'];
   if(method==='PUT'&&url==='/admin/users/{id}')required=['full_name','email'];
@@ -39,7 +42,7 @@ for(const [method,url,tag,summary,permissions,body,query=[]] of entries){
   const params=[...url.matchAll(/\{([^}]+)\}/g)].map(match=>({name:match[1],in:'path',required:true,schema:match[1]==='role'?{type:'string',enum:catalog.roles.map(r=>r.key)}:{type:'integer',minimum:1}}));
   for(const name of query)params.push({name,in:'query',schema:{type:'string'}});
   const op={tags:[tag],summary,description:permissions.includes('authenticated')?'Requires an active authenticated account.':permissions.length?'Required effective permissions: '+permissions.join(', ')+'. Resource routes also enforce ownership/membership or projects.view_all. Admin routes always require admin/super_admin.':'Public endpoint.',security:publicRoute?[]:security,parameters:params,'x-required-permissions':permissions,responses:{'200':{description:'Success; see API.md response envelopes'},'400':{description:'Invalid input'},'401':{description:'Missing/invalid/expired token'},'403':{description:'Permission, scope or origin denied'},'404':{description:'Resource not found'},'409':{description:'Duplicate, protected state or concurrent update'},'429':{description:'Authentication rate limit'},'500':{description:'Safe internal error'}}};
-  if(method==='POST'&&!url.startsWith('/auth/login')&&!url.startsWith('/auth/logout'))op.responses['201']={description:'Created'};
+  if(method==='POST'&&url!=='/notifications/push-devices'&&!url.startsWith('/auth/login')&&!url.startsWith('/auth/logout'))op.responses['201']={description:'Created'};
   if(body){op.requestBody={required:true,content:{'application/json':{schema:bodySchema(method,url,body),example:body}}};}
   paths[url]??={};paths[url][method.toLowerCase()]=op;
   const idVar=url.startsWith('/projects')||url.startsWith('/team')?'projectId':url.startsWith('/tasks')?'taskId':url.startsWith('/notifications')?'notificationId':url.startsWith('/reminders')?'reminderId':url.startsWith('/calendar/events')?'eventId':'userId';

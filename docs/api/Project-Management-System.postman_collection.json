@@ -1251,7 +1251,73 @@
             "description": "Requires an active authenticated account.",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email_task_assigned\": true,\n  \"email_due_tomorrow\": true,\n  \"email_overdue\": true,\n  \"web_task_assigned\": true,\n  \"web_due_tomorrow\": true,\n  \"web_overdue\": true,\n  \"browser_task_assigned\": false,\n  \"browser_due_tomorrow\": false\n}",
+              "raw": "{\n  \"email_task_assigned\": true,\n  \"email_due_tomorrow\": true,\n  \"email_overdue\": true,\n  \"web_task_assigned\": true,\n  \"web_due_tomorrow\": true,\n  \"web_overdue\": true,\n  \"browser_task_assigned\": false,\n  \"browser_due_tomorrow\": false,\n  \"push_due_tomorrow\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Register or renew current user mobile push device",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/notifications/push-devices",
+            "description": "Requires an active authenticated account.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"ExpoPushToken[example-device]\",\n  \"platform\": \"android\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Remove current user mobile push device",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/notifications/push-devices",
+            "description": "Requires an active authenticated account.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"ExpoPushToken[example-device]\"\n}",
               "options": {
                 "raw": {
                   "language": "json"

@@ -95,3 +95,18 @@ erDiagram
 ## Backup and retention
 
 Use consistent InnoDB snapshots (`mysqldump --single-transaction`) or managed database backups. Keep encrypted backups outside the application host and regularly restore to an isolated database. Never test destructive setup against production. Audit/notification retention is currently an operator responsibility; no automatic purging is configured.
+
+## Mobile push follow-up
+
+Run `server/scripts/migratePush.js` (included in db:migrate) to add `notification_preferences.push_due_tomorrow BOOLEAN NOT NULL DEFAULT FALSE` and `database/migration_mobile_push.sql`. Existing preferences/data remain intact.
+
+- **mobile_push_devices**: integer primary key; user_id FK to users (cascade delete); unique case-sensitive expo_token; platform; expires_at and updated_at. Owner/expiry index finds active devices. Registration renews for 30 days.
+- **mobile_push_receipts**: integer primary key; unique log_id FK to notification_logs (cascade delete); nullable device_id FK to mobile_push_devices (set null on delete); unique Expo ticket_id, created_at and checked_at. Pending-receipt index supports the 15-minute receipt checker.
+- Existing **notification_logs** accepts channel PUSH. A unique delivery_key includes the recipient/task/day and a token hash; status PROCESSING -> ACCEPTED (Expo ticket) -> SENT/FAILED (receipt). Tokens and provider message text are excluded from audit/error logs.
+
+```mermaid
+erDiagram
+    USERS ||--o{ MOBILE_PUSH_DEVICES : registers
+    MOBILE_PUSH_DEVICES o|--o{ MOBILE_PUSH_RECEIPTS : tracks
+    NOTIFICATION_LOGS ||--o| MOBILE_PUSH_RECEIPTS : confirms
+```

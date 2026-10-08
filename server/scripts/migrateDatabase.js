@@ -11,7 +11,7 @@ async function migrateDatabase(){
     const notifications=fs.readFileSync(path.resolve(__dirname,'../../database/migration_stage6.sql'),'utf8');
     for(const sql of notifications.split(';').map(statement=>statement.trim()).filter(statement=>statement.replace(/--[^\n]*/g,'').trim()))await connection.query(sql);
   }finally{connection.release();}
-  await require('./migrateAccess').migrate();await require('./migratePlanning').migratePlanning();await require('./migrateRelease').migrateRelease();
+  await require('./migrateAccess').migrate();await require('./migratePlanning').migratePlanning();await require('./migrateRelease').migrateRelease();await require('./migratePush').migratePush();
 }
 if(require.main===module)migrateDatabase().catch(error=>{console.error(require('../utils/logger').errorCode(error));process.exitCode=1;}).finally(()=>pool.end());
 module.exports={migrateDatabase};

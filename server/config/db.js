@@ -31,6 +31,7 @@ const testConnection = async () => {
       await connection.query('SELECT delivery_key FROM notification_logs LIMIT 1');
       await connection.query('SELECT id FROM reminders LIMIT 1');
       await connection.query('SELECT id FROM calendar_events LIMIT 1');
+      if(process.env.PUSH_ENABLED==='true'){await connection.query('SELECT push_due_tomorrow FROM notification_preferences LIMIT 1');await connection.query('SELECT id FROM mobile_push_devices LIMIT 1');await connection.query('SELECT id FROM mobile_push_receipts LIMIT 1');}
     } catch (error) { connection.release(); throw error; }
     connection.release();
     return true;

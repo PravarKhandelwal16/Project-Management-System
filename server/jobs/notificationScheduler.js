@@ -4,6 +4,7 @@ const {dispatchPersonalReminders}=require('./personalReminderJob');
 function startScheduler(){
   const safely=job=>job().catch(error=>logger.error('scheduled_job_failed',{code:logger.errorCode(error)}));
   const jobs=[
+    cron.schedule('*/15 * * * *',()=>safely(require('../services/mobilePushService').checkReceipts),{noOverlap:true}),
     cron.schedule('* * * * *',()=>safely(dispatchPersonalReminders),{timezone:process.env.APP_TIMEZONE||'Asia/Kolkata',noOverlap:true}),
     cron.schedule(process.env.REMINDER_CRON||'0 8 * * *',()=>safely(runReminders),{timezone:process.env.APP_TIMEZONE||'Asia/Kolkata',noOverlap:true})
   ];

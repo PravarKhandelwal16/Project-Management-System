@@ -421,3 +421,11 @@ Personal reminders/events/colours are owned by the authenticated account even fo
 Task list routes also accept `due_date=YYYY-MM-DD` and `overdue=true|false`. Overdue means an incomplete task due before today in `tz` (an IANA zone; default `APP_TIMEZONE` or `Asia/Kolkata`). Combined filters use AND. Invalid dates, zones and pagination return 400. The project-specific task route continues to enforce direct project access. `GET /api/projects/:id` includes `total_tasks`, `completed_tasks` and `progress`; these are null if effective `tasks.view` is absent.
 
 Native clients use the same Bearer token and REST routes as the web client. They do not require a separate CORS origin or a separate backend/database.
+
+## Mobile due-tomorrow push
+
+Authenticated `POST /api/notifications/push-devices` accepts `{ "token": "ExpoPushToken[device]", "platform": "android" }` (or ios), returns 200 `{success:true,message:"Push device registered."}` and renews a 30-day device registration. Tokens are bound to the current user, never a supplied user ID; signing in on another account rebinds that installation. Strict validation rejects unknown fields/tokens/platforms with 400. Registration is rate limited to 30 requests/minute and returns 503 if PUSH_ENABLED is false.
+
+Authenticated `DELETE /api/notifications/push-devices` accepts `{ "token": "ExpoPushToken[device]" }`, returns 200 and removes only the current user's matching device. It is idempotent and does not disclose another user's registrations. No token-list endpoint is exposed.
+
+`GET /api/notifications/preferences` includes boolean `push_due_tomorrow` (default false). `PUT` accepts that optional boolean alongside existing preferences. Mobile push is independent of email/inbox/browser settings. The daily reminder job sends only incomplete, assigned, accessible tasks due tomorrow in APP_TIMEZONE. See [push setup and tests](MOBILE_PUSH.md).

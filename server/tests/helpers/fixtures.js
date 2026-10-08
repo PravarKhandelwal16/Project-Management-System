@@ -11,6 +11,8 @@ process.env.DB_NAME=database;
 process.env.JWT_SECRET='isolated-tests-only-not-a-deployment-secret';
 process.env.JWT_EXPIRES_IN='1h';
 process.env.SCHEDULER_ENABLED='false';
+process.env.PUSH_ENABLED='false';
+process.env.EXPO_ACCESS_TOKEN='';
 const {pool}=require('../../config/db');
 const {migrate}=require('../../scripts/migrateAccess'),{migratePlanning}=require('../../scripts/migratePlanning'),{migrateRelease}=require('../../scripts/migrateRelease');
 const access=require('../../services/accessService'),jwt=require('jsonwebtoken');
@@ -43,9 +45,9 @@ before(async()=>{
   const schema=fs.readFileSync(path.resolve(__dirname,'../../../database/schema.sql'),'utf8').replace(/CREATE DATABASE IF NOT EXISTS project_management[\s\S]*?;/,'').replace('USE project_management;','');
   await connection.query(schema);
   await connection.query(fs.readFileSync(path.resolve(__dirname,'../../../database/migration_stage6.sql'),'utf8'));
-  await migrate();await migratePlanning();await migrateRelease();
+  await migrate();await migratePlanning();await migrateRelease();await require('../../scripts/migratePush').migratePush();
   // Idempotence is checked on the same database before any fixtures are created.
-  await migrate();await migratePlanning();await migrateRelease();
+  await migrate();await migratePlanning();await migrateRelease();await require('../../scripts/migratePush').migratePush();
   for(const role of access.catalog.roles)ids[role.key]=(await createUser(role.key,{full_name:role.label,email:role.key+'@isolated.test'})).id;
   assert.equal(await createProject(ids.project_manager,'Delivery'),1);assert.equal(await createProject(ids.admin,'Restricted'),2);
   for(const role of ['team_lead','project_coordinator','member','viewer'])await pool.execute('INSERT INTO project_members (project_id,user_id,added_by) VALUES (1,?,?)',[ids[role],ids.project_manager]);

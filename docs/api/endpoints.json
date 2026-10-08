@@ -432,7 +432,8 @@
       "web_due_tomorrow": true,
       "web_overdue": true,
       "browser_task_assigned": false,
-      "browser_due_tomorrow": false
+      "browser_due_tomorrow": false,
+      "push_due_tomorrow": false
     }
   ],
   [
@@ -715,5 +716,30 @@
       "page",
       "limit"
     ]
+  ],
+  [
+    "POST",
+    "/notifications/push-devices",
+    "Notifications",
+    "Register or renew current user mobile push device",
+    [
+      "authenticated"
+    ],
+    {
+      "token": "ExpoPushToken[example-device]",
+      "platform": "android"
+    }
+  ],
+  [
+    "DELETE",
+    "/notifications/push-devices",
+    "Notifications",
+    "Remove current user mobile push device",
+    [
+      "authenticated"
+    ],
+    {
+      "token": "ExpoPushToken[example-device]"
+    }
   ]
 ]
