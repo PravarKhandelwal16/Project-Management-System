@@ -279,10 +279,75 @@ const getSystemStats = async (req, res, next) => {
   }
 };
 
+/**
+ * Get Audit Logs
+ * GET /api/admin/audit-logs
+ */
+const getAuditLogs = async (req, res, next) => {
+  try {
+    const { action, user_id, resource_type, search, limit = 50 } = req.query;
+    
+    let whereClause = '1=1';
+    let queryParams = [];
+
+    if (action) {
+      whereClause += ' AND a.action = ?';
+      queryParams.push(action);
+    }
+    if (user_id) {
+      whereClause += ' AND a.user_id = ?';
+      queryParams.push(Number(user_id));
+    }
+    if (resource_type) {
+      whereClause += ' AND a.resource_type = ?';
+      queryParams.push(resource_type);
+    }
+    if (search) {
+      whereClause += ' AND a.details LIKE ?';
+      queryParams.push(`%${search}%`);
+    }
+
+    const parsedLimit = Number(limit) || 50;
+
+    const [rows] = await pool.query(`
+      SELECT a.id, a.user_id, u.full_name as user_name, a.action, a.resource_type, a.resource_id, a.details, a.created_at
+      FROM audit_logs a
+      LEFT JOIN users u ON a.user_id = u.id
+      WHERE ${whereClause}
+      ORDER BY a.created_at DESC
+      LIMIT ?
+    `, [...queryParams, parsedLimit]);
+
+    // parse JSON details if string
+    const data = rows.map(row => {
+      let detailsObj = row.details;
+      try {
+        if (typeof row.details === 'string') {
+          detailsObj = JSON.parse(row.details);
+        }
+      } catch (e) {
+        // ignore
+      }
+      return {
+        ...row,
+        details: detailsObj
+      };
+    });
+
+    return res.status(200).json({
+      success: true,
+      data
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   getUsers,
   getUserById,
   updateUserRole,
   updateUserStatus,
   getSystemStats,
+  getAuditLogs
 };

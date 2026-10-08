@@ -44,4 +44,11 @@ router.patch('/users/:id/status', adminController.updateUserStatus);
  */
 router.get('/stats', adminController.getSystemStats);
 
+/**
+ * @route   GET /api/admin/audit-logs
+ * @desc    Get audit logs
+ * @access  Private (Super Admin, Admin)
+ */
+router.get('/audit-logs', adminController.getAuditLogs);
+
 module.exports = router;
