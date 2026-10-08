@@ -19,5 +19,8 @@
     "project-management"
   ],
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "zod": "^4.6.5"
+  }
 }
