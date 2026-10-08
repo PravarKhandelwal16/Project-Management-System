@@ -29,7 +29,7 @@ React 19, Vite 8, Recharts, Express 5, Node.js 24, MySQL 8.0+, mysql2, bcrypt, J
 | member | Contributor; status updates for own assignments |
 | viewer | Read-only observer |
 
-Permissions can change; role names alone do not determine authorization. See [access management](docs/ACCESS_MANAGEMENT.md) and [security/authorization matrix](docs/SECURITY.md).
+Permissions can change; role names alone do not determine authorization. See the [security and authorization matrix](docs/SECURITY.md).
 
 ## Project Structure
 
@@ -152,7 +152,7 @@ npm run check
 
 SMTP_HOST empty disables outbound email. Configure SMTP_HOST/PORT/USER/PASS/FROM to enable it. Certificates are verified; port 465 uses implicit TLS, production other ports require STARTTLS. Personal reminders remain in-app notifications.
 
-APP_TIMEZONE controls the daily deadline schedule; REMINDER_CRON defaults to 08:00. SCHEDULER_ENABLED=false disables jobs. Use one active scheduler per deployment. Daily web deliveries are transactional and database-deduplicated; email attempts have a daily claim to prevent duplicates. Failed/uncertain email attempts are not automatically retried that day. [Planning guide](docs/PLANNING.md) contains personal reminder behavior.
+APP_TIMEZONE controls the daily deadline schedule; REMINDER_CRON defaults to 08:00. SCHEDULER_ENABLED=false disables jobs. Use one active scheduler per deployment. Daily web deliveries are transactional and database-deduplicated; email attempts have a daily claim to prevent duplicates. Failed/uncertain email attempts are not automatically retried that day. The [API reference](docs/API.md) documents personal reminders and calendar behavior.
 
 ## Deployment
 
