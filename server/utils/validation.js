@@ -161,6 +161,10 @@ const validateProjectSort = (sortBy = 'created_at', sortOrder = 'DESC') => {
   return { sortBy: cleanSortBy, sortOrder: cleanSortOrder };
 };
 
+const VALID_TASK_PRIORITIES = ['Low', 'Medium', 'High'];
+const VALID_TASK_STATUSES = ['Pending', 'In Progress', 'Completed'];
+const ALLOWED_TASK_SORT_FIELDS = ['name', 'due_date', 'priority', 'status', 'created_at', 'updated_at'];
+
 /**
  * Validates role input
  */
@@ -174,6 +178,57 @@ const validateRole = (role) => {
   return { isValid: true };
 };
 
+/**
+ * Validates task creation / update payload
+ */
+const validateTaskInput = ({ name, priority, status, due_date }, isCreate = false) => {
+  if (isCreate && (name === undefined || name === null)) {
+    return { isValid: false, error: 'Task name is required' };
+  }
+
+  if (name !== undefined) {
+    if (!name || typeof name !== 'string' || name.trim().length === 0) {
+      return { isValid: false, error: 'Task name is required' };
+    }
+    if (name.trim().length > 255) {
+      return { isValid: false, error: 'Task name cannot exceed 255 characters' };
+    }
+  }
+
+  if (priority !== undefined && priority !== null) {
+    if (!VALID_TASK_PRIORITIES.includes(priority)) {
+      return {
+        isValid: false,
+        error: `Invalid task priority. Must be one of: ${VALID_TASK_PRIORITIES.join(', ')}`,
+      };
+    }
+  }
+
+  if (status !== undefined && status !== null) {
+    if (!VALID_TASK_STATUSES.includes(status)) {
+      return {
+        isValid: false,
+        error: `Invalid task status. Must be one of: ${VALID_TASK_STATUSES.join(', ')}`,
+      };
+    }
+  }
+
+  if (due_date && !isValidDateString(due_date)) {
+    return { isValid: false, error: 'Invalid due date format' };
+  }
+
+  return { isValid: true };
+};
+
+/**
+ * Validates task sorting allowlist
+ */
+const validateTaskSort = (sortBy = 'created_at', sortOrder = 'DESC') => {
+  const cleanSortBy = ALLOWED_TASK_SORT_FIELDS.includes(sortBy) ? sortBy : 'created_at';
+  const cleanSortOrder = sortOrder && sortOrder.toUpperCase() === 'ASC' ? 'ASC' : 'DESC';
+  return { sortBy: cleanSortBy, sortOrder: cleanSortOrder };
+};
+
 module.exports = {
   validateFullName,
   validateEmail,
@@ -183,6 +238,12 @@ module.exports = {
   validateProjectInput,
   validateProjectSort,
   validateRole,
+  validateTaskInput,
+  validateTaskSort,
   VALID_PROJECT_STATUSES,
   ALLOWED_PROJECT_SORT_FIELDS,
+  VALID_TASK_PRIORITIES,
+  VALID_TASK_STATUSES,
+  ALLOWED_TASK_SORT_FIELDS,
 };
+
