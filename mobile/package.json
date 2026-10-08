@@ -1,0 +1,77 @@
+{
+  "name": "projectmaster-mobile",
+  "version": "1.0.0",
+  "main": "index.ts",
+  "dependencies": {
+    "@expo-google-fonts/plus-jakarta-sans": "^0.4.2",
+    "@react-native-community/datetimepicker": "9.1.0",
+    "@react-navigation/bottom-tabs": "^7.20.0",
+    "@react-navigation/native": "^7.5.0",
+    "@react-navigation/native-stack": "^7.20.0",
+    "expo": "~57.0.27",
+    "expo-build-properties": "~57.0.22",
+    "expo-dev-client": "~57.0.19",
+    "expo-font": "~57.0.4",
+    "expo-secure-store": "~57.0.4",
+    "expo-status-bar": "~57.0.1",
+    "lucide-react-native": "^1.53.0",
+    "react": "19.2.3",
+    "react-native": "0.86.3",
+    "react-native-safe-area-context": "~5.7.0",
+    "react-native-screens": "~4.26.0",
+    "react-native-svg": "15.15.4",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@testing-library/react-native": "13.3.3",
+    "@types/react": "~19.2.2",
+    "babel-preset-expo": "~57.0.1",
+    "react-test-renderer": "19.2.3",
+    "typescript": "~6.0.3",
+    "jest-expo": "~57.0.5"
+  },
+  "scripts": {
+    "start": "expo start --go",
+    "android": "expo start --go --android",
+    "ios": "expo start --go --ios",
+    "test": "jest --runInBand",
+    "test:coverage": "jest --runInBand --coverage",
+    "typecheck": "tsc --noEmit",
+    "bundle:android": "expo export --platform android --output-dir dist",
+    "check": "npm run typecheck && npm test && npm run bundle:android",
+    "build:apk": "npx eas-cli@latest build --platform android --profile preview",
+    "start:dev-client": "expo start --dev-client"
+  },
+  "private": true,
+  "jest": {
+    "preset": "jest-expo/android",
+    "testMatch": [
+      "<rootDir>/tests/**/*.test.[jt]s?(x)"
+    ],
+    "setupFilesAfterEnv": [
+      "<rootDir>/tests/setup.js"
+    ],
+    "collectCoverageFrom": [
+      "src/services/**/*.{js,ts}",
+      "src/context/*.{ts,tsx}"
+    ],
+    "moduleNameMapper": {
+      "^zod$": "<rootDir>/node_modules/zod/index.cjs"
+    },
+    "transformIgnorePatterns": [
+      "node_modules/(?!((jest-)?react-native|@react-native(-community)?|expo(nent)?|@expo(nent)?/.*|@react-navigation/.*|lucide-react-native|react-native-svg|@expo-google-fonts/.*))"
+    ],
+    "modulePaths": [
+      "<rootDir>/node_modules"
+    ],
+    "transform": {
+      "^.+\\.[cm]?[jt]sx?$": "babel-jest"
+    }
+  },
+  "overrides": {
+    "xcode": {
+      "uuid": "11.1.1"
+    }
+  },
+  "license": "ISC"
+}
