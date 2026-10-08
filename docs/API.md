@@ -407,3 +407,17 @@ Import the collection. Set `baseUrl`, `email`, `password`, and `newEmail` locall
 ## Notes
 
 Personal reminders/events/colours are owned by the authenticated account even for administrators. Report/search data follows project scope; removing task viewing hides task metrics. Role overrides cannot grant administrative actions to non-admin roles. Last active Super Admin and self-modification protections apply. Role policy updates require the current `version`, obtainable from GET /admin/roles.
+
+## Mobile-compatible pagination and deadline filters
+
+`GET /api/projects`, `GET /api/tasks`, and `GET /api/projects/:id/tasks` accept optional `page` (1-10000) and `limit` (1-100, default 20). Supplying either activates database pagination. Without both, the legacy unpaged response remains compatible with the web client. Ties in the selected sort field are ordered by ID to keep pages deterministic.
+
+```json
+{"success":true,"count":20,"data":[],"pagination":{"page":1,"limit":20,"has_more":true}}
+```
+
+`count` is the number returned on this page. `has_more` uses one extra row, without loading the entire list or exposing totals from unrelated projects. The example shows envelope fields; real `data` contains the returned records.
+
+Task list routes also accept `due_date=YYYY-MM-DD` and `overdue=true|false`. Overdue means an incomplete task due before today in `tz` (an IANA zone; default `APP_TIMEZONE` or `Asia/Kolkata`). Combined filters use AND. Invalid dates, zones and pagination return 400. The project-specific task route continues to enforce direct project access. `GET /api/projects/:id` includes `total_tasks`, `completed_tasks` and `progress`; these are null if effective `tasks.view` is absent.
+
+Native clients use the same Bearer token and REST routes as the web client. They do not require a separate CORS origin or a separate backend/database.

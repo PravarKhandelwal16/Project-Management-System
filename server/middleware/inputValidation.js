@@ -1,3 +1,5 @@
+const { pagination } = require('../utils/pagination');
+const { todayInZone } = require('../services/reportService');
 const v=require('../utils/validation');
 const fail=message=>Object.assign(new Error(message),{statusCode:400});
 function bodyFields(...keys){return(req,res,next)=>Object.keys(req.body||{}).some(key=>!keys.includes(key))?next(fail('Unexpected request field.')):next();}
@@ -5,6 +7,11 @@ function validateIdentifier(value){return (typeof value==='number'||typeof value
 function listQuery(kind){return(req,res,next)=>{
   try{
     const q=req.query;
+    for (const [key,value] of Object.entries(q)) if (typeof value !== 'string') throw fail('Invalid ' + key + ' query value.');
+    pagination(q);
+    if (q.due_date && (!/^\d{4}-\d{2}-\d{2}$/.test(q.due_date) || Number.isNaN(Date.parse(q.due_date)) || new Date(q.due_date).toISOString().slice(0,10) !== q.due_date)) throw fail('Invalid due date filter.');
+    if (q.overdue && !['true','false'].includes(q.overdue)) throw fail('Invalid overdue filter.');
+    if (q.tz) todayInZone(q.tz);
     if(q.search&&q.search.length>255)throw fail('Search must be at most 255 characters.');
     if(q.status&&!((kind==='projects'?v.VALID_PROJECT_STATUSES:v.VALID_TASK_STATUSES).includes(q.status)))throw fail('Invalid status filter.');
     if(q.priority&&!v.VALID_TASK_PRIORITIES.includes(q.priority))throw fail('Invalid priority filter.');

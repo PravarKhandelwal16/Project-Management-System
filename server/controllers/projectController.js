@@ -1,3 +1,4 @@
+const { hasPermission } = require('../services/accessService');
 const projectModel = require('../models/projectModel');
 const projectMemberModel = require('../models/projectMemberModel');
 const { logAuditEvent } = require('../services/auditService');
@@ -13,17 +14,18 @@ const { validateProjectInput } = require('../utils/validation');
  */
 const getProjects = async (req, res, next) => {
   try {
-    const { search, status, sortBy, sortOrder } = req.query;
+    const { search, status, sortBy, sortOrder, page, limit } = req.query;
     const projects = await projectModel.getAccessibleProjects(req.user, {
       search,
       status,
       sortBy,
-      sortOrder,
+      sortOrder, page, limit,
     });
 
     return res.status(200).json({
       success: true,
       count: projects.length,
+      ...(projects.pagination ? { pagination: projects.pagination } : {}),
       data: projects,
     });
   } catch (error) {
@@ -40,11 +42,12 @@ const getProjectById = async (req, res, next) => {
     // req.project is already verified and populated by requireProjectAccess('view')
     const projectId = req.project.id;
     const members = await projectMemberModel.getMembersByProjectId(projectId);
+    const summary = hasPermission(req.user, 'tasks.view') ? await projectModel.getTaskSummary(projectId) : { total_tasks: null, completed_tasks: null, progress: null };
 
     return res.status(200).json({
       success: true,
       data: {
-        ...req.project,
+        ...req.project, ...summary,
         members,
       },
     });

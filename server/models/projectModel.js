@@ -1,3 +1,4 @@
+const { pagination, pageResult } = require('../utils/pagination');
 const { pool } = require('../config/db');
 const { projectScope, hasPermission } = require('../services/accessService');
 const { validateProjectSort } = require('../utils/validation');
@@ -79,7 +80,7 @@ const getProjectById = async (id) => {
  * @param {string} [options.sortOrder]
  * @returns {Promise<Array<object>>}
  */
-const getAccessibleProjects = async (user, { search = '', status = '', sortBy = 'created_at', sortOrder = 'DESC' } = {}) => {
+const getAccessibleProjects = async (user, { search = '', status = '', sortBy = 'created_at', sortOrder = 'DESC', page, limit } = {}) => {
   const { sortBy: cleanSortBy, sortOrder: cleanSortOrder } = validateProjectSort(sortBy, sortOrder);
 
   let sql = `
@@ -106,6 +107,7 @@ const getAccessibleProjects = async (user, { search = '', status = '', sortBy = 
     WHERE 1=1
   `;
 
+  const paging = pagination({ page, limit });
   const scope = projectScope(user);
   const params = [user.id, hasPermission(user, 'projects.edit') ? 1 : 0, ...scope.params];
   sql += ' AND ' + scope.sql;
@@ -123,14 +125,15 @@ const getAccessibleProjects = async (user, { search = '', status = '', sortBy = 
   }
 
   // Safe sorting using allowlist
-  sql += ` ORDER BY p.${cleanSortBy} ${cleanSortOrder}`;
+  sql += ` ORDER BY p.${cleanSortBy} ${cleanSortOrder}, p.id ${cleanSortOrder}`;
+  if (paging) { sql += ' LIMIT ? OFFSET ?'; params.push(String(paging.limit + 1), String(paging.offset)); }
 
   const [rows] = await pool.execute(sql, params);
-  return rows.map(project => {
+  return pageResult(rows.map(project => {
     const allowed = hasPermission(user, 'tasks.view');
     return { ...project, total_tasks: allowed ? Number(project.total_tasks) : null, completed_tasks: allowed ? Number(project.completed_tasks) : null, overdue_tasks: allowed ? Number(project.overdue_tasks) : null,
       progress: allowed ? (project.total_tasks ? Math.round(project.completed_tasks / project.total_tasks * 100) : 0) : null };
-  });
+  }), paging);
 };
 
 /**
@@ -172,7 +175,13 @@ const deleteProject = async (id) => {
   return result.affectedRows > 0;
 };
 
+const getTaskSummary = async (id) => {
+  const [rows] = await pool.execute("SELECT COUNT(*) AS total_tasks, COALESCE(SUM(status = 'Completed'),0) AS completed_tasks FROM tasks WHERE project_id = ?", [id]);
+  const total = Number(rows[0].total_tasks), completed = Number(rows[0].completed_tasks);
+  return { total_tasks: total, completed_tasks: completed, progress: total ? Math.round(completed / total * 100) : 0 };
+};
 module.exports = {
+  getTaskSummary,
   createProject,
   getProjectById,
   getAccessibleProjects,

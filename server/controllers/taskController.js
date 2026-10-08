@@ -58,7 +58,7 @@ const getTasks = async (req, res, next) => {
       priority,
       search,
       sortBy,
-      order,
+      order, page, limit, due_date, overdue, tz,
     } = req.query;
 
     const tasks = await taskModel.getAccessibleTasks(req.user, {
@@ -68,12 +68,13 @@ const getTasks = async (req, res, next) => {
       priority,
       search,
       sortBy,
-      order,
+      order, page, limit, due_date, overdue, tz,
     });
 
     return res.status(200).json({
       success: true,
       count: tasks.length,
+      ...(tasks.pagination ? { pagination: tasks.pagination } : {}),
       data: tasks,
     });
   } catch (error) {
@@ -88,7 +89,7 @@ const getTasks = async (req, res, next) => {
 const getProjectTasks = async (req, res, next) => {
   try {
     const projectId = req.project.id;
-    const { status, priority, search, sortBy, order } = req.query;
+    const { status, priority, search, sortBy, order, page, limit, due_date, overdue, tz } = req.query;
 
     const tasks = await taskModel.getAccessibleTasks(req.user, {
       project_id: projectId,
@@ -96,12 +97,13 @@ const getProjectTasks = async (req, res, next) => {
       priority,
       search,
       sortBy,
-      order,
+      order, page, limit, due_date, overdue, tz,
     });
 
     return res.status(200).json({
       success: true,
       count: tasks.length,
+      ...(tasks.pagination ? { pagination: tasks.pagination } : {}),
       data: tasks,
     });
   } catch (error) {

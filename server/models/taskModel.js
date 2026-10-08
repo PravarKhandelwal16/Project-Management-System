@@ -1,3 +1,5 @@
+const { pagination, pageResult } = require('../utils/pagination');
+const { todayInZone } = require('../services/reportService');
 const { pool } = require('../config/db');
 const { projectScope, hasPermission } = require('../services/accessService');
 const { validateTaskSort } = require('../utils/validation');
@@ -90,7 +92,7 @@ const getAccessibleTasks = async (
     priority = '',
     search = '',
     sortBy = 'created_at',
-    order = 'DESC',
+    order = 'DESC', page, limit, due_date, overdue, tz,
   } = {}
 ) => {
   const { sortBy: cleanSortBy, sortOrder: cleanSortOrder } = validateTaskSort(sortBy, order);
@@ -120,6 +122,7 @@ const getAccessibleTasks = async (
     WHERE 1=1
   `;
 
+  const paging = pagination({ page, limit });
   const scope = projectScope(user);
   const params = [...scope.params];
   sql += ' AND ' + scope.sql;
@@ -152,11 +155,14 @@ const getAccessibleTasks = async (
     params.push(searchPattern, searchPattern);
   }
 
+  if (due_date) { sql += ' AND t.due_date = ?'; params.push(due_date); }
+  if (overdue === 'true') { sql += " AND t.status != 'Completed' AND t.due_date < ?"; params.push(todayInZone(tz || process.env.APP_TIMEZONE || 'Asia/Kolkata')); }
   // Sorting
-  sql += ` ORDER BY t.${cleanSortBy} ${cleanSortOrder}`;
+  sql += ` ORDER BY t.${cleanSortBy} ${cleanSortOrder}, t.id ${cleanSortOrder}`;
+  if (paging) { sql += ' LIMIT ? OFFSET ?'; params.push(String(paging.limit + 1), String(paging.offset)); }
 
   const [rows] = await pool.execute(sql, params);
-  return rows;
+  return pageResult(rows, paging);
 };
 
 /**
