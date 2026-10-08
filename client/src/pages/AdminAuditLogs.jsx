@@ -1,3 +1,4 @@
+import Skeleton from '../components/Skeleton';
 import { useEffect, useState } from 'react';
 import { apiRequest } from '../services/api';
 import './Management.css';
@@ -27,7 +28,7 @@ export default function AdminAuditLogs() {
     <header className="management-heading"><div><h1>Audit history</h1><p>Trace account access, permission changes and project activity.</p></div><button className="management-button secondary" disabled={loading || !!error || !result.data.length} onClick={exportPage}>Export this page</button></header>
     <form className="management-toolbar" onSubmit={event => { event.preventDefault(); setQuery({ ...draft, page: 1 }); }}>
       <input type="search" name="search" aria-label="Search audit events" placeholder="Search actor, action, resource ID or details?" value={draft.search} onChange={field} />
-      <select name="resource_type" aria-label="Resource type" value={draft.resource_type} onChange={field}><option value="">All resources</option>{['USER','ROLE','PROJECT','TASK','REMINDER','ACCESS'].map(value => <option key={value} value={value}>{humanize(value)}</option>)}</select>
+      <select name="resource_type" aria-label="Resource type" value={draft.resource_type} onChange={field}><option value="">All resources</option>{['USER','ROLE','PROJECT','TASK','REMINDER','CALENDAR_EVENT','ACCESS'].map(value => <option key={value} value={value}>{humanize(value)}</option>)}</select>
       <select name="action" aria-label="Event action" value={draft.action} onChange={field}><option value="">All actions</option>{result.actions.map(value => <option key={value} value={value}>{humanize(value)}</option>)}</select>
       <label>Actor ID<input type="number" name="user_id" min="1" step="1" placeholder="Any actor" value={draft.user_id} onChange={field} /></label>
       <label>From<input type="date" name="from" value={draft.from} onChange={field} max={draft.to || undefined} /></label>
@@ -36,7 +37,7 @@ export default function AdminAuditLogs() {
       <button type="button" className="management-button secondary" disabled={loading} onClick={() => setRefresh(value => value + 1)}>Refresh</button>
     </form>
     {error && <div className="management-notice error" role="alert">{error}</div>}
-    {loading ? <div className="management-empty" role="status">Loading audit history?</div> : error ? <div className="management-empty">Could not load audit events. Refresh to try again.</div> : !result.data.length ? <div className="management-empty"><h2>No matching events</h2><p>Try broadening the date range or clearing your filters.</p></div> : <div className="management-table-wrap"><table className="management-table">
+    {loading ? <Skeleton label="Loading audit history"/> : error ? <div className="management-empty">Could not load audit events. Refresh to try again.</div> : !result.data.length ? <div className="management-empty"><h2>No matching events</h2><p>Try broadening the date range or clearing your filters.</p></div> : <div className="management-table-wrap"><table className="management-table">
       <thead><tr><th>When</th><th>Actor</th><th>Event</th><th>Resource & changes</th></tr></thead>
       <tbody>{result.data.map(log => {
         const details = log.details;

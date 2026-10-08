@@ -1,3 +1,4 @@
+import BrandMark from '../components/BrandMark';
 import { useState, useEffect } from 'react';
 import { checkHealth } from '../services/api';
 import StatusBadge from '../components/StatusBadge';
@@ -28,7 +29,7 @@ export const HomePage = () => {
       {/* Header / Nav */}
       <header className="header">
         <div className="brand">
-          <div className="brand-icon">📁</div>
+          <div className="brand-icon"><BrandMark size={48}/></div>
           <div>
             <h1 className="brand-title">Project Management System</h1>
             <p className="brand-subtitle">Full-Stack Application Foundation</p>

@@ -1,3 +1,4 @@
+import BrandMark from '../components/BrandMark';
 import { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -83,7 +84,7 @@ export const Login = () => {
       <div className="auth-card">
         {/* Header */}
         <div className="auth-header">
-          <div className="auth-brand-icon">🔐</div>
+          <div className="auth-brand-icon"><BrandMark size={48}/></div>
           <h1 className="auth-title">Welcome Back</h1>
           <p className="auth-subtitle">Sign in to access your projects and tasks</p>
         </div>

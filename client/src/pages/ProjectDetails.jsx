@@ -1,4 +1,7 @@
+import { useConfirm } from '../context/ConfirmationContext';
 import ProjectWork from '../components/planning/ProjectWork';
+import EmailMember from '../components/EmailMember';
+import Skeleton from '../components/Skeleton';
 import accessCatalog from '@shared/access.json';
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
@@ -15,6 +18,7 @@ import {
 import StatusBadge from '../components/StatusBadge';
 
 export const ProjectDetails = () => {
+  const confirm = useConfirm();
   const { id } = useParams();
   const navigate = useNavigate();
   const { user, hasPermission } = useAuth();
@@ -135,7 +139,7 @@ export const ProjectDetails = () => {
   };
 
   const handleDeleteProject = async () => {
-    if (!window.confirm(`Are you sure you want to permanently delete "${project.name}"? This action cannot be undone.`)) {
+    if (!await confirm({title:'Delete project?',description:`Permanently delete "${project.name}" and all its tasks? This cannot be undone.`,confirmLabel:'Delete project'})) {
       return;
     }
 
@@ -174,7 +178,7 @@ export const ProjectDetails = () => {
   };
 
   const handleRemoveMember = async (userId, memberName) => {
-    if (!window.confirm(`Remove ${memberName} from this project?`)) {
+    if (!await confirm({title:'Remove team member?',description:`Remove ${memberName} from this project? They will lose membership-based access to the project.`,confirmLabel:'Remove member'})) {
       return;
     }
 
@@ -194,10 +198,7 @@ export const ProjectDetails = () => {
   if (loading) {
     return (
       <div className="page-container">
-        <div className="loading-state">
-          <div className="spinner" />
-          <p>Loading project details...</p>
-        </div>
+        <Skeleton label="Loading project details"/>
       </div>
     );
   }
@@ -361,7 +362,7 @@ export const ProjectDetails = () => {
                           <span className="user-table-name">{member.full_name}</span>
                         </div>
                       </td>
-                      <td>{member.email}</td>
+                      <td>{member.email}<EmailMember email={member.email} name={member.full_name}/></td>
                       <td>
                         <span className="role-tag role-member">{accessCatalog.roles.find(role => role.key === member.role)?.label || member.role}</span>
                       </td>

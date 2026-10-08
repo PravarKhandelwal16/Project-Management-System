@@ -1,12 +1,16 @@
+import { useConfirm } from '../context/ConfirmationContext';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { apiRequest, addProjectMemberApi, removeProjectMemberApi } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import catalog from '@shared/access.json';
 import ManagementDialog from '../components/management/ManagementDialog';
+import EmailMember from '../components/EmailMember';
+import Skeleton from '../components/Skeleton';
 import './Management.css';
 const roleLabel = key => catalog.roles.find(role => role.key === key)?.label || key;
 export default function Team() {
+  const confirm = useConfirm();
   const { hasPermission } = useAuth();
   const [teamQuery] = useSearchParams();
   const preferredProject = teamQuery.get('project_id');
@@ -55,7 +59,7 @@ export default function Team() {
     try { await addProjectMemberApi(projectId, Number(selectedId)); setAdding(false); setNotice('Member added to the project team.'); await loadRoster(); } catch (err) { setCandidateError(err.message); } finally { setBusy(false); }
   };
   const removeMember = async member => {
-    if (!window.confirm('Remove ' + member.full_name + ' from ' + project.name + '?')) return;
+    if (!await confirm({title:'Remove team member?',description:'Remove '+member.full_name+' from '+project.name+'? They will lose membership-based access to the project.',confirmLabel:'Remove member'})) return;
     setBusy(true); setError(''); setNotice('');
     try { await removeProjectMemberApi(projectId, member.user_id); setNotice('Member removed from the project team.'); await loadRoster(); } catch (err) { setError(err.message); } finally { setBusy(false); }
   };
@@ -68,9 +72,9 @@ export default function Team() {
       {project && <Link to={'/projects/' + projectId}>View project</Link>}
     </div>
     <div className="management-stats">{[['Team members', roster.length], ['Open tasks', hasPermission('tasks.view') ? roster.reduce((sum, item) => sum + item.open_tasks, 0) : '?'], ['Overdue tasks', hasPermission('tasks.view') ? roster.reduce((sum, item) => sum + item.overdue_tasks, 0) : '?']].map(([label, value]) => <div className="management-stat" key={label}><strong>{value}</strong><span>{label}</span></div>)}</div>
-    {loading ? <div className="management-empty" role="status">Loading project team?</div> : !projects.length ? <div className="management-empty"><h2>No project teams yet</h2><p>Create a project or ask a manager to add you to one.</p></div> : !members.length ? <div className="management-empty">No team members match these filters.</div> : <div className="management-table-wrap"><table className="management-table">
+    {loading ? <Skeleton label="Loading project team"/> : !projects.length ? <div className="management-empty"><h2>No project teams yet</h2><p>Create a project or ask a manager to add you to one.</p></div> : !members.length ? <div className="management-empty">No team members match these filters.</div> : <div className="management-table-wrap"><table className="management-table">
       <thead><tr><th>Person</th><th>Management role</th><th>Department</th><th>Workload</th><th>Membership</th>{canManage && <th>Actions</th>}</tr></thead>
-      <tbody>{members.map(member => <tr key={member.user_id}><td><strong>{member.full_name}</strong><small>{member.email}</small><small>{member.job_title || 'No job title'}</small>{!member.is_active && <span className="management-badge inactive">Inactive account</span>}</td>
+      <tbody>{members.map(member => <tr key={member.user_id}><td><strong>{member.full_name}</strong><small>{member.email}</small><EmailMember email={member.email} name={member.full_name}/><small>{member.job_title || 'No job title'}</small>{!member.is_active && <span className="management-badge inactive">Inactive account</span>}</td>
         <td><span className="management-badge">{roleLabel(member.role)}</span></td><td>{member.department || '?'}</td>
         <td>{member.open_tasks == null ? 'Restricted' : <><strong>{member.open_tasks} open</strong><small>{member.assigned_tasks} assigned total</small>{member.overdue_tasks > 0 && <span className="management-badge warning">{member.overdue_tasks} overdue</span>}</>}</td>
         <td>{member.is_owner ? <span className="management-badge">Project owner</span> : <><span>Project member</span><small>Joined {new Date(member.joined_at).toLocaleDateString()}</small></>}</td>

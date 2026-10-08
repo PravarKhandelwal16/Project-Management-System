@@ -1,3 +1,4 @@
+import { useConfirm } from '../context/ConfirmationContext';
 import { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { apiRequest } from '../services/api';
@@ -9,13 +10,14 @@ import ReminderDialog from '../components/planning/ReminderDialog';
 import ReminderList from '../components/planning/ReminderList';
 import { prettyDate, taskStatuses, isOverdue, canChangeStatus } from '../utils/planning';
 export default function TaskDetails(){
+  const confirm = useConfirm();
   const {id}=useParams(),navigate=useNavigate();const {user,hasPermission}=useAuth();
   const {data:task,loading,error,reload}=useRemote('/tasks/'+id);
   const {data:projects=[]}=useRemote('/projects');
   const reminders=useRemote('/reminders?task_id='+id);
   const [editing,setEditing]=useState(false),[reminder,setReminder]=useState(null),[busy,setBusy]=useState(false),[actionError,setActionError]=useState(''),[notice,setNotice]=useState('');
   const changeStatus=async value=>{setBusy(true);setActionError('');try{await apiRequest('/tasks/'+id+'/status',{method:'PATCH',data:{status:value}});reload();setNotice('Status updated.');}catch(err){setActionError(err.message);}finally{setBusy(false);}};
-  const remove=async()=>{if(!window.confirm('Delete "'+task.name+'"? This cannot be undone.'))return;setBusy(true);setActionError('');try{await apiRequest('/tasks/'+id,{method:'DELETE'});navigate('/tasks');}catch(err){setActionError(err.message);}finally{setBusy(false);}};
+  const remove=async()=>{if(!await confirm({title:'Delete task?',description:'Permanently delete "'+task.name+'"? This cannot be undone.',confirmLabel:'Delete task'}))return;setBusy(true);setActionError('');try{await apiRequest('/tasks/'+id,{method:'DELETE'});navigate('/tasks');}catch(err){setActionError(err.message);}finally{setBusy(false);}};
   return <div className="planning-page"><Link className="planning-text-link" to="/tasks">← All tasks</Link><PageHeader eyebrow={task?.project_name||'TASK'} title={task?.name||'Task details'} description="Keep the work, ownership and follow-ups in one place.">{task&&hasPermission('tasks.edit')&&<button className="management-button secondary" onClick={()=>setEditing(true)}>Edit task</button>}{task&&<button className="management-button" disabled={task.status==='Completed'} onClick={()=>setReminder({})}>Add reminder</button>}</PageHeader>
     {notice&&<div className="management-notice" role="status">{notice}</div>}{actionError&&<div className="management-notice error" role="alert">{actionError}</div>}
     <LoadState loading={loading} error={error} onRetry={reload}>{task&&<div className="planning-layout"><section className="planning-panel"><div className="planning-panel-header"><h2>Task brief</h2><div className="planning-inline"><Badge value={task.priority}/>{isOverdue(task)&&<Badge value="Overdue"/>}</div></div><p className="planning-description">{task.description||'No description yet.'}</p><dl className="planning-details-list"><dt>Project</dt><dd><Link className="planning-text-link" to={'/projects/'+task.project_id}>{task.project_name}</Link></dd><dt>Assignee</dt><dd>{task.assignee_name||'Unassigned'}</dd><dt>Due date</dt><dd>{prettyDate(task.due_date)}</dd><dt>Created by</dt><dd>{task.creator_name||'—'}</dd><dt>Status</dt><dd>{canChangeStatus(user,hasPermission,task)?<select className="planning-status-select" disabled={busy} aria-label="Task status" value={task.status} onChange={event=>changeStatus(event.target.value)}>{taskStatuses.map(value=><option key={value}>{value}</option>)}</select>:<Badge value={task.status}/>}</dd></dl>{hasPermission('tasks.delete')&&<button className="management-button danger" style={{marginTop:25}} disabled={busy} onClick={remove}>Delete task</button>}</section>

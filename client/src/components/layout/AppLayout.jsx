@@ -20,7 +20,7 @@ const AppLayout = ({ children }) => {
       <div className="main-wrapper">
         <Header toggleSidebar={toggleSidebar} />
         <main className="main-content">
-          {children}
+          <div className="workspace-page" key={location.pathname}>{children}</div>
         </main>
       </div>
     </div>

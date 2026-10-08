@@ -1,3 +1,4 @@
+import BrandMark from '../components/BrandMark';
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -89,7 +90,7 @@ export const Register = () => {
       <div className="auth-card">
         {/* Header */}
         <div className="auth-header">
-          <div className="auth-brand-icon">📝</div>
+          <div className="auth-brand-icon"><BrandMark size={48}/></div>
           <h1 className="auth-title">Create an Account</h1>
           <p className="auth-subtitle">Join the Project Management System workspace</p>
         </div>

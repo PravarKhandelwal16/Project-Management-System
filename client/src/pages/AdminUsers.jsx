@@ -1,3 +1,5 @@
+import { useConfirm } from '../context/ConfirmationContext';
+import Skeleton from '../components/Skeleton';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { apiRequest } from '../services/api';
@@ -9,6 +11,7 @@ import './Management.css';
 const emptyForm = { full_name: '', email: '', department: '', job_title: '', password: '', role: 'member' };
 const roleLabel = key => catalog.roles.find(role => role.key === key)?.label || key;
 export default function AdminUsers() {
+  const confirm = useConfirm();
   const { user, hasPermission, refreshUser } = useAuth();
   const requestSequence = useRef(0);
   const [tab, setTab] = useState('users');
@@ -98,7 +101,7 @@ export default function AdminUsers() {
         <select aria-label="Filter account status" value={filters.is_active} onChange={event => changeFilter('is_active', event.target.value)}><option value="">All statuses</option><option value="true">Active</option><option value="false">Inactive</option></select>
         <button className="management-button secondary" onClick={loadUsers} disabled={loading}>Refresh</button>
       </div>
-      {loading ? <div className="management-empty" role="status">Loading accounts?</div> : !result.data.length ? <div className="management-empty"><h2>No accounts found</h2><p>Try changing your search or filters.</p></div> : <div className="management-table-wrap"><table className="management-table">
+      {loading ? <Skeleton label="Loading accounts"/> : !result.data.length ? <div className="management-empty"><h2>No accounts found</h2><p>Try changing your search or filters.</p></div> : <div className="management-table-wrap"><table className="management-table">
         <thead><tr><th>Person</th><th>Role</th><th>Department</th><th>Status</th><th>Actions</th></tr></thead>
         <tbody>{result.data.map(target => <tr key={target.id}>
           <td><strong>{target.full_name}{target.id === user.id && ' (You)'}</strong><small>{target.email}</small><small>{target.job_title || 'No job title'}</small></td>
@@ -107,8 +110,8 @@ export default function AdminUsers() {
           <td>{canModify(target) ? <div className="management-actions">
             {hasPermission('users.edit') && <button className="management-button secondary" onClick={() => openProfile(target)}>Edit profile</button>}
             {hasPermission('users.roles') && <><button className="management-button secondary" onClick={() => openRole(target)}>Change role</button>{target.role !== 'super_admin' && <button className="management-button secondary" onClick={() => openPermissions(target)}>Permissions</button>}</>}
-            {hasPermission('users.status') && <button disabled={busy} className={'management-button ' + (target.is_active ? 'danger' : 'secondary')} onClick={() => {
-              if (window.confirm((target.is_active ? 'Deactivate ' : 'Reactivate ') + target.full_name + '?')) run(() => apiRequest('/admin/users/' + target.id + '/status', { method: 'PATCH', data: { is_active: !target.is_active } }), 'Account status updated.');
+            {hasPermission('users.status') && <button disabled={busy} className={'management-button ' + (target.is_active ? 'danger' : 'secondary')} onClick={async () => {
+              if (await confirm({title:target.is_active?'Deactivate account?':'Reactivate account?',description:target.is_active?'Deactivate '+target.full_name+'? They will lose access until their account is reactivated.':'Restore workspace access for '+target.full_name+'?',confirmLabel:target.is_active?'Deactivate account':'Reactivate account',danger:!!target.is_active})) run(() => apiRequest('/admin/users/' + target.id + '/status', { method: 'PATCH', data: { is_active: !target.is_active } }), 'Account status updated.');
             }}>{target.is_active ? 'Deactivate' : 'Reactivate'}</button>}
           </div> : <small>Protected account</small>}</td>
         </tr>)}</tbody></table></div>}

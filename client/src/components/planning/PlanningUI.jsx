@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import Skeleton from '../Skeleton';
 import { isOverdue, prettyDate } from '../../utils/planning';
 import '../../pages/Management.css';
 import '../../pages/Planning.css';
@@ -8,8 +9,8 @@ export function PageHeader({eyebrow='WORKSPACE',title,description,children}) {
 export function Metrics({items}) {
   return <div className="planning-metrics">{items.map(item=><div key={item.label} className={'planning-metric '+(item.tone||'')}><span>{item.label}</span><strong>{item.value??'—'}</strong>{item.note&&<small>{item.note}</small>}</div>)}</div>;
 }
-export function LoadState({loading,error,onRetry,empty,children}) {
-  if(loading) return <div className="planning-state" role="status"><span className="spinner"/><p>Loading your workspace…</p></div>;
+export function LoadState({loading,error,onRetry,empty,children,calendar=false}) {
+  if(loading) return <Skeleton calendar={calendar}/>;
   if(error) return <div className="planning-state" role="alert"><h2>Could not load this view</h2><p>{error}</p><button className="management-button secondary" onClick={onRetry}>Try again</button></div>;
   if(empty) return <div className="planning-state"><h2>Nothing here yet</h2><p>Try changing your filters, or create your first item.</p></div>;
   return children;

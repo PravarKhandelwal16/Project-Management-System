@@ -1,3 +1,4 @@
+import { useConfirm } from '../context/ConfirmationContext';
 import { useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { Plus, LayoutGrid, List } from 'lucide-react';
@@ -8,6 +9,7 @@ import { PageHeader, Metrics, LoadState, Badge, Progress } from '../components/p
 import ProjectDialog from '../components/planning/ProjectDialog';
 import { projectStatuses, prettyDate } from '../utils/planning';
 export default function Projects(){
+  const confirm = useConfirm();
   const {hasPermission}=useAuth();const [query]=useSearchParams();
   const {data:projects=[],loading,error,reload}=useRemote('/projects');
   const [filters,setFilters]=useState({search:'',status:'',sort:'newest'}),[view,setView]=useState('grid'),[dialog,setDialog]=useState(query.get('create')&&hasPermission('projects.create')?{}:null);
@@ -15,7 +17,7 @@ export default function Projects(){
   const all=projects||[];
   const filtered=all.filter(project=>(!filters.status||project.status===filters.status)&&(!filters.search||[project.name,project.description,project.owner_name].some(value=>value?.toLowerCase().includes(filters.search.toLowerCase())))).sort((a,b)=>filters.sort==='name'?a.name.localeCompare(b.name):filters.sort==='due'?(a.end_date||'9999').localeCompare(b.end_date||'9999'):filters.sort==='progress'?(b.progress||0)-(a.progress||0):b.id-a.id);
   const change=(key,value)=>{setFilters(previous=>({...previous,[key]:value}));setPage(1);};
-  const remove=async project=>{if(!window.confirm('Delete "'+project.name+'" and all its tasks? This cannot be undone.'))return;setBusy(project.id);setActionError('');try{await apiRequest('/projects/'+project.id,{method:'DELETE'});setNotice('Project deleted.');reload();}catch(err){setActionError(err.message);}finally{setBusy(null);}};
+  const remove=async project=>{if(!await confirm({title:'Delete project?',description:'Deleting "'+project.name+'" will permanently delete the project and all its tasks. This cannot be undone.',confirmLabel:'Delete project'}))return;setBusy(project.id);setActionError('');try{await apiRequest('/projects/'+project.id,{method:'DELETE'});setNotice('Project deleted.');reload();}catch(err){setActionError(err.message);}finally{setBusy(null);}};
   const actions=project=><div className="management-actions">{hasPermission('tasks.view')&&<Link className="planning-text-link" to={'/tasks?project_id='+project.id}>Tasks</Link>}{hasPermission('team.view')&&<Link className="planning-text-link" to={'/team?project_id='+project.id}>Team</Link>}{hasPermission('projects.edit')&&<button className="management-button secondary" disabled={busy!==null} onClick={()=>setDialog(project)}>Edit</button>}{hasPermission('projects.delete')&&<button className="management-button danger" disabled={busy!==null} onClick={()=>remove(project)}>Delete</button>}</div>;
   return <div className="planning-page"><PageHeader title="Projects" description="A clear view of delivery, ownership and project health.">{hasPermission('projects.create')&&<button className="management-button" onClick={()=>setDialog({})}><Plus size={15}/> New project</button>}</PageHeader>
     <Metrics items={[{label:'Accessible projects',value:all.length},{label:'In progress',value:all.filter(project=>project.status==='In Progress').length},{label:'Completed',value:all.filter(project=>project.status==='Completed').length,tone:'success'},{label:'With overdue work',value:hasPermission('tasks.view')?all.filter(project=>project.overdue_tasks>0).length:null,tone:'danger'}]}/>

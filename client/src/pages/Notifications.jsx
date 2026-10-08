@@ -1,3 +1,4 @@
+import Skeleton from '../components/Skeleton';
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
@@ -138,7 +139,7 @@ const Notifications = () => {
 
           <div style={{ padding: '20px' }}>
             {loading ? (
-              <div style={{ textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>Loading...</div>
+              <Skeleton label="Loading notifications" rows={4}/>
             ) : filteredNotifications.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>
                 <Bell size={48} style={{ opacity: 0.2, marginBottom: '10px' }} />

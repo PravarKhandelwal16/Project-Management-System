@@ -1,3 +1,4 @@
+import Skeleton from './Skeleton';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
@@ -11,8 +12,7 @@ export const ProtectedRoute = ({ children, permission }) => {
   if (loading) {
     return (
       <div className="auth-loading-screen">
-        <div className="spinner" />
-        <p>Verifying authentication...</p>
+        <div style={{width:'min(900px, 90vw)'}}><Skeleton label="Verifying authentication" rows={3}/></div>
       </div>
     );
   }

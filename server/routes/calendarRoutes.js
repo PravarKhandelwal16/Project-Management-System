@@ -1,0 +1,11 @@
+const router = require('express').Router();
+const controller = require('../controllers/calendarController');
+router.use(require('../middleware/authMiddleware'));
+router.get('/events',controller.listEvents);
+router.post('/events',controller.saveEvent);
+router.put('/events/:id',controller.saveEvent);
+router.delete('/events/:id',controller.deleteEvent);
+router.get('/colours',controller.getColours);
+router.put('/colours',controller.saveColour);
+router.delete('/colours',controller.resetColours);
+module.exports = router;

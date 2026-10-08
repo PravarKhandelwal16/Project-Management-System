@@ -1,3 +1,4 @@
+import Skeleton from '../components/Skeleton';
 import React, { useState, useEffect } from 'react';
 import { getNotificationPreferencesApi, updateNotificationPreferencesApi } from '../services/api';
 import './Dashboard.css';
@@ -5,6 +6,8 @@ import './Dashboard.css';
 const Settings = () => {
   const [preferences, setPreferences] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [message, setMessage] = useState({ type: '', text: '' });
   const [browserPermission, setBrowserPermission] = useState(
     typeof window !== 'undefined' && 'Notification' in window ? Notification.permission : 'default'
   );
@@ -72,7 +75,7 @@ const Settings = () => {
     }
   };
 
-  if (loading) return <div style={{ padding: '20px' }}>Loading settings...</div>;
+  if (loading) return <Skeleton label="Loading settings"/>;
   if (!preferences) return null;
 
   return (
@@ -82,7 +85,7 @@ const Settings = () => {
       </div>
 
       <div className="dashboard-content">
-        <div className="card-container" style={{ maxWidth: '800px', display: 'flex', flexDirection: 'column', gap: '30px' }}>
+        <div className="card-container" style={{ display: 'flex', flexDirection: 'column', gap: '30px' }}>
           
           <div>
             <h3 style={{ borderBottom: '1px solid var(--border-color)', paddingBottom: '10px', marginBottom: '15px' }}>

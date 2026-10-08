@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import './Layout.css';
+import BrandMark from '../BrandMark';
 
 const Sidebar = ({ isOpen, toggleSidebar }) => {
   const { hasPermission, logout } = useAuth();
@@ -45,7 +46,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
       <aside className={`sidebar ${isOpen ? 'open' : ''}`}>
         <div className="sidebar-header">
           <div className="sidebar-logo">
-            <div className="logo-icon">PM</div>
+            <BrandMark size={36}/>
             <span className="logo-text">ProjectMaster</span>
           </div>
           <button className="sidebar-close-btn" onClick={toggleSidebar}>

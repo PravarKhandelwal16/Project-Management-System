@@ -1,11 +1,13 @@
+import { useConfirm } from '../../context/ConfirmationContext';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { apiRequest } from '../../services/api';
 import { prettyTime } from '../../utils/planning';
 export default function ReminderList({reminders,onEdit,onChanged}) {
+  const confirm = useConfirm();
   const [busy,setBusy]=useState(null),[error,setError]=useState('');
   const act=async(reminder,remove=false)=>{
-    if(remove&&!window.confirm('Delete reminder "'+reminder.title+'"?'))return;
+    if(remove&&!await confirm({title:'Delete reminder?',description:'Permanently delete "'+reminder.title+'"? This cannot be undone.',confirmLabel:'Delete reminder'}))return;
     setBusy(reminder.id);setError('');
     try{await apiRequest('/reminders/'+reminder.id,{method:remove?'DELETE':'PUT',data:remove?undefined:{status:'dismissed'}});onChanged();}catch(err){setError(err.message);}finally{setBusy(null);}
   };

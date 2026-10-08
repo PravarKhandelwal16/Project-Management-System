@@ -21,5 +21,6 @@ router.use('/notifications', notificationRoutes);
 router.use('/team', require('./teamRoutes'));
 router.use('/reminders', require('./reminderRoutes'));
 router.use('/analytics', require('./analyticsRoutes'));
+router.use('/calendar', require('./calendarRoutes'));
 
 module.exports = router;
