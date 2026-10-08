@@ -550,9 +550,10 @@ export function DateField({ label, value, onChange }: any) {
           value={value ? new Date(value + "T12:00:00") : now}
           mode="date"
           themeVariant="dark"
-          onChange={(event, date) => {
-            setOpen(Platform.OS === "ios" && event.type !== "dismissed");
-            if (date && event.type !== "dismissed")
+          onDismiss={() => setOpen(false)}
+          onValueChange={(_event, date) => {
+            setOpen(Platform.OS === "ios");
+            if (date)
               onChange(
                 [
                   date.getFullYear(),

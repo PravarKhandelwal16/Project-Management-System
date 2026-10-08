@@ -10,6 +10,7 @@ jobs:
       DB_PASSWORD: ci-isolated-only
       DB_NAME: project_management_unused
       DB_NAME_TEST: project_management_test
+      EXPO_PUBLIC_API_URL: https://example.invalid/api
       JWT_SECRET: ci-tests-only-not-a-production-secret
     steps:
       - uses: actions/checkout@v4
@@ -27,6 +28,10 @@ jobs:
       - run: npm ci
       - run: npm ci --prefix server
       - run: npm ci --prefix client
+      - run: npm ci --prefix mobile
+      - run: npm --prefix mobile run typecheck
+      - run: npm --prefix mobile run test:coverage
+      - run: npm --prefix mobile run bundle:android
       - run: npm --prefix server run test:coverage
       - run: npm --prefix client run lint
       - run: npm --prefix client run build
@@ -40,5 +45,6 @@ jobs:
           name: quality-reports
           path: |
             server/coverage
+            mobile/coverage
             client/playwright-report
             client/test-results

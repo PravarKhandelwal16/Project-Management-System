@@ -2,7 +2,7 @@
 
 ## Overview
 
-A React/Vite, Express and MySQL workspace for projects, assigned tasks, team management, reporting and personal planning. Stage 7 adds automated testing, security hardening and reproducible release preparation without changing the product scope.
+A React/Vite, Express and MySQL workspace for projects, assigned tasks, team management, reporting and personal planning. Stage 7 adds testing, security and release preparation. Stage 8 adds an Expo mobile client that uses the same accounts, Express REST API, MySQL database and effective permissions.
 
 ## Features
 
@@ -11,10 +11,11 @@ A React/Vite, Express and MySQL workspace for projects, assigned tasks, team man
 - Scoped dashboard and analytics, account administration and searchable audit history.
 - In-app/email notifications, preferences, daily reminders and personal reminders/events.
 - Responsive pages, skeleton loaders, keyboard-accessible confirmations and Gmail compose links.
+- Android-first mobile dashboard, projects, tasks, notifications, team, analytics, settings and permitted admin tools.
 
 ## Tech Stack
 
-React 19, Vite 8, Recharts, Express 5, Node.js 24, MySQL 8.0+, mysql2, bcrypt, JWT, Zod, Helmet. Tests use the existing **Node test runner** with native HTTP requests and c8 coverage; browser checks use Playwright Chromium.
+React 19, Vite 8, Recharts, Express 5, Node.js 24, MySQL 8.0+, mysql2, bcrypt, JWT, Zod, Helmet. Mobile uses Expo 57, React Native 0.86, React Navigation 7 and SecureStore; mobile tests use Jest Expo and React Native Testing Library. Backend tests use the existing **Node test runner** with native HTTP requests and c8 coverage; browser checks use Playwright Chromium.
 
 ## Roles
 
@@ -35,6 +36,7 @@ Permissions can change; role names alone do not determine authorization. See the
 
 ```text
 client/                    React UI, Playwright tests and production build
+mobile/                    Expo/React Native app, native navigation and mobile tests
 server/
   controllers/ services/   API and domain logic
   middleware/ config/      Auth, RBAC, validation and environment/security setup
@@ -141,7 +143,7 @@ npm --prefix client test
 npm run check
 ```
 
-`npm test` runs backend and browser tests. Integration tests generate/drop only isolated DB_NAME_TEST databases. Direct destructive test runs require NODE_ENV=test; database safety checks refuse development/production names. Emails are mocked; the email transport rejects real SMTP in test mode. [Testing guide](docs/TESTING.md) explains privileges, coverage and browser fixtures.
+`npm test` runs backend, browser and mobile tests. `npm run test:mobile` runs mobile tests alone. Integration tests generate/drop only isolated DB_NAME_TEST databases. Direct destructive test runs require NODE_ENV=test; database safety checks refuse development/production names. Emails are mocked; the email transport rejects real SMTP in test mode. [Testing guide](docs/TESTING.md) explains privileges, coverage and browser fixtures.
 
 ## API Documentation
 
@@ -171,9 +173,22 @@ npm --prefix server run seed:demo
 
 The script creates all eight `<role>@pms.demo.invalid` accounts, a sample project and task. It generates a strong shared demo password and prints it once, or uses DEMO_PASSWORD you provide. It refuses existing demo accounts and production/test mode. No credentials are embedded in production code.
 
+## Mobile Application (Stage 8)
+
+Follow [mobile setup and distribution](mobile/README.md), [implementation review and file inventory](docs/STAGE8_REVIEW.md), and [mobile verification/demo guide](docs/MOBILE_TESTING.md).
+
+```powershell
+npm run install:mobile
+Copy-Item mobile/.env.example mobile/.env
+# Start the existing backend in another terminal.
+npm run dev:mobile
+```
+
+Use `http://10.0.2.2:5000/api` for the Android emulator, a computer LAN address for a physical phone, or your deployed HTTPS API. Expo Go must match SDK 57. `npm run android:mobile` opens the emulator. JWTs are kept in SecureStore, never AsyncStorage. No second backend or mobile database is created. Changes become visible on refresh or when returning to a screen. Push delivery is not configured; the shared in-app inbox and existing email scheduler work.
+
 ## Future Mobile Support
 
-The REST API and shared schemas can support another client. No mobile application or additional major product features are included in Stage 7.
+Stage 8 includes Android distribution profiles and portable iOS source. Physical-device and signed-build review should be completed for each deployment. Offline mutation queues, native push delivery and store publishing remain future work.
 
 ## Submission
 

@@ -9,13 +9,20 @@
     "build:client": "npm --prefix client run build",
     "install:server": "npm --prefix server install",
     "install:client": "npm --prefix client install",
-    "install:all": "npm install --prefix server && npm install --prefix client",
-    "test": "npm --prefix server test && npm --prefix client test",
+    "install:all": "npm install --prefix server && npm install --prefix client && npm install --prefix mobile",
+    "test": "npm --prefix server test && npm --prefix client test && npm --prefix mobile test",
     "test:unit": "npm --prefix server run test:unit",
     "test:integration": "npm --prefix server run test:integration",
     "test:coverage": "npm --prefix server run test:coverage",
     "check": "npm --prefix client run lint && npm --prefix client run build",
-    "db:migrate": "npm --prefix server run db:migrate"
+    "db:migrate": "npm --prefix server run db:migrate",
+    "dev:mobile": "npm --prefix mobile start",
+    "android:mobile": "npm --prefix mobile run android",
+    "install:mobile": "npm --prefix mobile install",
+    "test:mobile": "npm --prefix mobile test",
+    "check:mobile": "npm --prefix mobile run check",
+    "build:mobile": "npm --prefix mobile run bundle:android",
+    "test:mobile-preview": "node server/scripts/mobilePreview.js"
   },
   "keywords": [
     "react",

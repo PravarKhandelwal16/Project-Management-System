@@ -39,3 +39,15 @@ Repository quality checks are documented in [Stage 7 review](STAGE7_REVIEW.md). 
 - [ ] Complete actual release-specific approvals and operational checks.
 
 No remote deployment or publication is performed by Stage 7.
+
+## Stage 8 mobile submission
+
+- [ ] Follow mobile/README.md with the existing backend/account/database.
+- [ ] Verify mobile typecheck, Jest suite, Expo Doctor and Android export with HTTPS environment.
+- [ ] Verify backend mobile integration and existing browser regression checks.
+- [ ] Run the native role/network/persistence checklist in docs/MOBILE_TESTING.md on your emulator/device.
+- [ ] Record the sixteen-step same-account/web-mobile synchronization demo.
+- [ ] Review upstream mobile tooling dependency advisories before release.
+- [ ] Link your own Expo project, configure the real HTTPS API and produce/install a signed internal APK.
+- [ ] Share the EAS internal-distribution link with intended testers; publishing to Play Store is optional.
+- [ ] Include docs/STAGE8_REVIEW.md file/package inventory and validation limits in submission.

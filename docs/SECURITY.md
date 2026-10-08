@@ -121,3 +121,9 @@ Assignment PATCH retries use an atomic conditional update so concurrent identica
 - Use one active scheduler; personal reminders also use transactional deduplication.
 - Runtime MySQL needs SELECT/INSERT/UPDATE/DELETE only after migrations; use a separate migration account and private network/TLS for managed remote databases.
 - No configured env file, generated demo password, production credential or populated test database belongs in a submission.
+
+## Stage 8 native client
+
+The mobile client reuses the protected REST API, resource scope and effective permission policies. JWT is persisted with Expo SecureStore, never AsyncStorage. API configuration comes only from EXPO_PUBLIC_API_URL, without backend secrets. Preview/production builds require HTTPS and disable Android cleartext traffic; development may use a reachable local HTTP API. Cold-start /me verification, local logout and private-401 invalidation are covered by tests. Native UI gates are convenience only; the server rejects forbidden resources/actions independently.
+
+Native push is not enabled; no misleading browser-to-push preference mapping or extra permission prompt is added. Cross-platform data comes from server refresh, with no offline mutation replay. Existing browser localStorage/stateless JWT limitations remain unchanged. See [Stage 8 review](STAGE8_REVIEW.md) for the complete dependency advisory disclosure: Expo/Metro/Jest tooling has unresolved upstream advisories and needs release review; npm audit force would downgrade Expo incompatibly.
