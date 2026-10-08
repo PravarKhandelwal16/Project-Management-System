@@ -209,4 +209,32 @@ Response:
 ```
 
 ### 2. Frontend Starter Verification
-Navigate to `http://localhost:5173`. You will see the starter page with a live backend connectivity indicator and a button to ping `/api/health`.
+Navigate to `http://localhost:5173`. You will see the application login page.
+
+---
+
+## 👥 Pre-Configured Test Profiles
+
+The system comes pre-seeded with test accounts covering all Role-Based Access Control (RBAC) tiers:
+
+| Role | Name | Email | Password | Access Scope & Key Features |
+| :--- | :--- | :--- | :--- | :--- |
+| **Super Admin** | System Super Admin | `admin@projectmanagement.com` | `SuperAdmin123!` | Complete platform authority: User Management (`/admin/users`), Audit Logs (`/admin/audit-logs`), all projects & tasks |
+| **Admin** | Stage4 Admin | `admin@teststage4.com` | `Password123!` | Administrative control: Role modification, security audit logs, workspace oversight |
+| **Project Manager** | Stage4 PM 1 | `pm1@teststage4.com` | `Password123!` | Project leadership: Create/manage projects, add members, assign tasks, set deadlines |
+| **Project Manager (Alt)** | Stage4 PM 2 | `pm2@teststage4.com` | `Password123!` | Secondary PM for multi-project workflows and task reassignments |
+| **Team Member** | Stage4 Member 1 | `member1@teststage4.com` | `Password123!` | Contributor: View assigned projects/tasks, update status (`Pending` → `In Progress` → `Completed`), view personal dashboard |
+| **Team Member (Alt)** | Stage4 Member 2 | `member2@teststage4.com` | `Password123!` | Secondary contributor for testing task re-assignment & notification triggers |
+
+### 🧪 Automated Notification & Reminder Testing
+
+```bash
+# In the server directory:
+cd server
+
+# 1. Test Email Service (simulated output or SMTP if configured)
+npm run test:email
+
+# 2. Test Scheduled Reminder Job (evaluates tasks due tomorrow & overdue)
+npm run test:reminders
+```
