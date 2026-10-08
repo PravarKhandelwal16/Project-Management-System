@@ -17,10 +17,12 @@ CREATE TABLE IF NOT EXISTS users (
     full_name VARCHAR(100) NOT NULL,
     email VARCHAR(255) NOT NULL UNIQUE,
     password_hash VARCHAR(255) NOT NULL,
-    role ENUM('user', 'admin') NOT NULL DEFAULT 'user',
+    role ENUM('super_admin', 'admin', 'project_manager', 'member') NOT NULL DEFAULT 'member',
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    INDEX idx_users_role (role)
+    INDEX idx_users_role (role),
+    INDEX idx_users_is_active (is_active)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
@@ -43,7 +45,28 @@ CREATE TABLE IF NOT EXISTS projects (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
--- 3. Table: tasks
+-- 3. Table: project_members
+-- --------------------------------------------------------
+CREATE TABLE IF NOT EXISTS project_members (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    project_id INT NOT NULL,
+    user_id INT NOT NULL,
+    added_by INT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_project_members_project FOREIGN KEY (project_id) 
+        REFERENCES projects(id) ON DELETE CASCADE,
+    CONSTRAINT fk_project_members_user FOREIGN KEY (user_id) 
+        REFERENCES users(id) ON DELETE CASCADE,
+    CONSTRAINT fk_project_members_added_by FOREIGN KEY (added_by) 
+        REFERENCES users(id) ON DELETE CASCADE,
+    UNIQUE KEY uq_project_user (project_id, user_id),
+    INDEX idx_pm_project_id (project_id),
+    INDEX idx_pm_user_id (user_id),
+    INDEX idx_pm_added_by (added_by)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+-- 4. Table: tasks
 -- --------------------------------------------------------
 CREATE TABLE IF NOT EXISTS tasks (
     id INT AUTO_INCREMENT PRIMARY KEY,

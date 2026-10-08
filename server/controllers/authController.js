@@ -41,12 +41,13 @@ const register = async (req, res, next) => {
     // 3. Hash password securely with bcrypt
     const password_hash = await bcrypt.hash(password, BCRYPT_SALT_ROUNDS);
 
-    // 4. Create user in database (default role: 'user')
+    // 4. Create user in database (Stage 3 default role: 'member', is_active: 1)
     const userId = await userModel.createUser({
       full_name: trimmedName,
       email: normalizedEmail,
       password_hash,
-      role: 'user',
+      role: 'member',
+      is_active: 1,
     });
 
     // 5. Record audit log
@@ -58,7 +59,7 @@ const register = async (req, res, next) => {
       details: {
         email: normalizedEmail,
         full_name: trimmedName,
-        role: 'user',
+        role: 'member',
       },
     });
 
@@ -97,6 +98,14 @@ const login = async (req, res, next) => {
       return res.status(401).json({
         success: false,
         message: 'Invalid email or password',
+      });
+    }
+
+    // Check account status
+    if (!user.is_active) {
+      return res.status(403).json({
+        success: false,
+        message: 'Your account has been deactivated. Please contact an administrator.',
       });
     }
 
@@ -152,6 +161,7 @@ const login = async (req, res, next) => {
         full_name: user.full_name,
         email: user.email,
         role: user.role,
+        is_active: !!user.is_active,
       },
     });
   } catch (error) {
@@ -165,25 +175,15 @@ const login = async (req, res, next) => {
  */
 const getMe = async (req, res, next) => {
   try {
-    // req.user is set by authMiddleware
-    const userId = req.user.id;
-    const user = await userModel.findById(userId);
-
-    if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: 'User account not found',
-      });
-    }
-
+    // req.user is populated by database-backed authMiddleware
     return res.status(200).json({
       success: true,
       user: {
-        id: user.id,
-        full_name: user.full_name,
-        email: user.email,
-        role: user.role,
-        created_at: user.created_at,
+        id: req.user.id,
+        full_name: req.user.full_name,
+        email: req.user.email,
+        role: req.user.role,
+        is_active: req.user.is_active,
       },
     });
   } catch (error) {

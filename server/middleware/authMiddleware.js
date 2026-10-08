@@ -1,10 +1,12 @@
 const jwt = require('jsonwebtoken');
+const userModel = require('../models/userModel');
 
 /**
  * Authentication Middleware
- * Validates JSON Web Token from the Authorization header and attaches decoded user to req.user
+ * Validates JSON Web Token from Authorization header AND performs database-backed verification
+ * to ensure roles and active status are always fresh (never stale from old JWT claims).
  */
-const authenticateToken = (req, res, next) => {
+const authenticateToken = async (req, res, next) => {
   const authHeader = req.headers.authorization || req.headers.Authorization;
 
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -34,8 +36,33 @@ const authenticateToken = (req, res, next) => {
 
   try {
     const decoded = jwt.verify(token, secret);
-    // Attach decoded user information: id, email, role
-    req.user = decoded;
+
+    // Database-backed verification to prevent stale JWT claims
+    const user = await userModel.findById(decoded.id);
+
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        message: 'User account no longer exists. Please register or log in again.',
+      });
+    }
+
+    if (!user.is_active) {
+      return res.status(403).json({
+        success: false,
+        message: 'Your account has been deactivated. Please contact an administrator.',
+      });
+    }
+
+    // Attach fresh, database-verified user context to request
+    req.user = {
+      id: user.id,
+      email: user.email,
+      full_name: user.full_name,
+      role: user.role,
+      is_active: !!user.is_active,
+    };
+
     next();
   } catch (error) {
     if (error.name === 'TokenExpiredError') {

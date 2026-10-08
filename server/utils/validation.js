@@ -1,8 +1,12 @@
 /**
- * Validation utilities for User Authentication
+ * Reusable validation utilities for Authentication, Projects, and Roles
  */
 
+const { ALL_ROLES } = require('./roles');
+
 const EMAIL_REGEX = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+const VALID_PROJECT_STATUSES = ['Not Started', 'In Progress', 'Completed'];
+const ALLOWED_PROJECT_SORT_FIELDS = ['name', 'status', 'start_date', 'end_date', 'created_at'];
 
 /**
  * Validates full name
@@ -68,8 +72,6 @@ const validatePassword = (password) => {
 
 /**
  * Validates registration input payload
- * @param {{ full_name?: string, email?: string, password?: string }} data
- * @returns {{ isValid: boolean, error?: string }}
  */
 const validateRegisterInput = ({ full_name, email, password }) => {
   const nameCheck = validateFullName(full_name);
@@ -86,8 +88,6 @@ const validateRegisterInput = ({ full_name, email, password }) => {
 
 /**
  * Validates login input payload
- * @param {{ email?: string, password?: string }} data
- * @returns {{ isValid: boolean, error?: string }}
  */
 const validateLoginInput = ({ email, password }) => {
   if (!email || typeof email !== 'string' || email.trim().length === 0) {
@@ -102,10 +102,87 @@ const validateLoginInput = ({ email, password }) => {
   return { isValid: true };
 };
 
+/**
+ * Validates date string (YYYY-MM-DD)
+ */
+const isValidDateString = (dateStr) => {
+  if (!dateStr) return true;
+  const d = new Date(dateStr);
+  return !isNaN(d.getTime());
+};
+
+/**
+ * Validates project create/update input payload
+ */
+const validateProjectInput = ({ name, description, status, start_date, end_date }) => {
+  if (!name || typeof name !== 'string' || name.trim().length === 0) {
+    return { isValid: false, error: 'Project name is required' };
+  }
+  const trimmedName = name.trim();
+  if (trimmedName.length < 2) {
+    return { isValid: false, error: 'Project name must be at least 2 characters long' };
+  }
+  if (trimmedName.length > 255) {
+    return { isValid: false, error: 'Project name cannot exceed 255 characters' };
+  }
+
+  if (status && !VALID_PROJECT_STATUSES.includes(status)) {
+    return {
+      isValid: false,
+      error: `Invalid status. Must be one of: ${VALID_PROJECT_STATUSES.join(', ')}`,
+    };
+  }
+
+  if (start_date && !isValidDateString(start_date)) {
+    return { isValid: false, error: 'Invalid start date format' };
+  }
+
+  if (end_date && !isValidDateString(end_date)) {
+    return { isValid: false, error: 'Invalid end date format' };
+  }
+
+  if (start_date && end_date) {
+    const start = new Date(start_date);
+    const end = new Date(end_date);
+    if (end < start) {
+      return { isValid: false, error: 'End date cannot be earlier than start date' };
+    }
+  }
+
+  return { isValid: true };
+};
+
+/**
+ * Validates sorting parameters for projects allowlist
+ */
+const validateProjectSort = (sortBy = 'created_at', sortOrder = 'DESC') => {
+  const cleanSortBy = ALLOWED_PROJECT_SORT_FIELDS.includes(sortBy) ? sortBy : 'created_at';
+  const cleanSortOrder = sortOrder && sortOrder.toUpperCase() === 'ASC' ? 'ASC' : 'DESC';
+  return { sortBy: cleanSortBy, sortOrder: cleanSortOrder };
+};
+
+/**
+ * Validates role input
+ */
+const validateRole = (role) => {
+  if (!role || !ALL_ROLES.includes(role)) {
+    return {
+      isValid: false,
+      error: `Invalid role. Must be one of: ${ALL_ROLES.join(', ')}`,
+    };
+  }
+  return { isValid: true };
+};
+
 module.exports = {
   validateFullName,
   validateEmail,
   validatePassword,
   validateRegisterInput,
   validateLoginInput,
+  validateProjectInput,
+  validateProjectSort,
+  validateRole,
+  VALID_PROJECT_STATUSES,
+  ALLOWED_PROJECT_SORT_FIELDS,
 };
