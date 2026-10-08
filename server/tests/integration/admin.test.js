@@ -29,15 +29,42 @@ test('user lifecycle, duplicate email, security and audit snapshots', async () =
   assert.equal((await request('admin','/admin/audit-logs?from=2026-01-01&to=2026-12-31')).status,200);
   assert.equal((await request('admin','/admin/users?search=Delivery')).data.total,1);
 });
-test('administrative updates roll back if their audit entry cannot be written', async () => {
-  await pool.query("CREATE TRIGGER reject_profile_audit BEFORE INSERT ON audit_logs FOR EACH ROW BEGIN IF NEW.action = 'USER_PROFILE_UPDATED' THEN SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Intentional test audit failure'; END IF; END");
+test('administrative updates roll back if their audit entry cannot be written', async (t) => {
+  const [before] = await pool.execute('SELECT full_name,email,department,job_title FROM users WHERE id = ?', [ids.viewer]);
+  const getConnection = pool.getConnection.bind(pool);
+  let rejectedInserts = 0;
+  // Exercise a real SQL failure without CREATE TRIGGER/SUPER or server-wide binlog changes.
+  const acquisition = t.mock.method(pool, 'getConnection', async () => {
+    const connection = await getConnection();
+    const execute = connection.execute.bind(connection);
+    t.mock.method(connection, 'execute', async (sql, params) => {
+      if (sql.startsWith('INSERT INTO audit_logs') && params[1] === 'USER_PROFILE_UPDATED') {
+        rejectedInserts++;
+        // All fixture users have positive IDs; this forces the audit user FK to reject the insert.
+        return execute(sql, [-1, ...params.slice(1)]);
+      }
+      return execute(sql, params);
+    });
+    return connection;
+  });
   try {
-    const result = await request('admin','/admin/users/' + ids.viewer,'PUT',{full_name:'Should roll back',email:'viewer@isolated.test'});
+    const result = await request('admin','/admin/users/' + ids.viewer,'PUT',{
+      full_name:'Should roll back',email:'rollback@isolated.test',department:'Changed',job_title:'Changed'
+    });
     assert.equal(result.status,500);
-    const [rows] = await pool.execute('SELECT full_name FROM users WHERE id = ?', [ids.viewer]);
-    assert.equal(rows[0].full_name,'Read-only Observer');
-  } finally { await pool.query('DROP TRIGGER reject_profile_audit'); }
+    assert.deepEqual(result.data,{success:false,message:'Internal server error'});
+    assert.equal(rejectedInserts,1);
+    const [rows] = await pool.execute('SELECT full_name,email,department,job_title FROM users WHERE id = ?', [ids.viewer]);
+    assert.deepEqual(rows,before);
+    const [audits] = await pool.execute("SELECT id FROM audit_logs WHERE action='USER_PROFILE_UPDATED' AND resource_id=?", [ids.viewer]);
+    assert.equal(audits.length,0);
+  } finally { acquisition.mock.restore(); }
+  // The same API remains usable after rollback; successful updates still write their audit.
+  assert.equal((await request('admin','/admin/users/' + ids.viewer,'PUT',before[0])).status,200);
+  const [audits] = await pool.execute("SELECT id FROM audit_logs WHERE action='USER_PROFILE_UPDATED' AND resource_id=?", [ids.viewer]);
+  assert.equal(audits.length,1);
 });
+
 test('concurrent super-admin deactivations preserve an active platform owner', async () => {
   const [insert] = await pool.execute("INSERT INTO users (full_name,email,password_hash,role) VALUES ('Second Owner','second-owner@isolated.test','not-used','super_admin')");
   ids.second_owner = insert.insertId;

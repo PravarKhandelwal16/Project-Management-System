@@ -53,3 +53,9 @@ Assignment and reminder functions are mocked before the server/jobs run. Tests v
 .github/workflows/ci.yml starts the native MySQL service on Ubuntu 24.04 and creates a dedicated account restricted to the test database namespace, Node 24, coverage, lint/build, Chromium checks and dependency audits. Quality reports are uploaded even on failure. CI secrets shown in the workflow are disposable service credentials, never deployment credentials.
 
 The workflow uses the preinstalled service and disposable runner root credentials documented in the [GitHub Ubuntu 24.04 runner image](https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2404-Readme.md#mysql). Application tests run as pms_test rather than root.
+
+## MySQL binary logging and rollback tests
+
+CI uses a schema-scoped test account on the host MySQL service. The administrative rollback test injects an invalid actor ID into the actual transactional audit INSERT, causing a real foreign-key rejection after the profile UPDATE. It checks all profile fields remain unchanged, no audit row commits, a safe 500 is returned, and a subsequent valid update/audit succeeds. Only that audit query is intercepted; authentication, authorization, SQL UPDATE, transaction/rollback and database constraints remain real.
+
+No CREATE TRIGGER, SUPER grant or log_bin_trust_function_creators change is required. This avoids MySQL error ER_BINLOG_CREATE_ROUTINE_NEED_SUPER on runners with binary logging enabled while keeping the audit atomicity assertion. Historical failed workflow runs must be followed by a new run of the corrected commit; rerunning an old commit retains its old test.
