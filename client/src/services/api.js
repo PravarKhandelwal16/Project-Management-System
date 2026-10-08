@@ -3,7 +3,7 @@
  * Handles communication with Express backend, JWT headers, and error normalization
  */
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const API_BASE_URL = (import.meta.env.VITE_API_URL || '/api').replace(/\/$/, '');
 
 /**
  * Custom error class for API failures
@@ -59,10 +59,11 @@ export const apiRequest = async (endpoint, options = {}) => {
       responseData = await response.json();
     } else {
       const text = await response.text();
-      responseData = { message: text };
+      responseData = { message: response.ok ? text : 'The server could not complete this request. Please try again.' };
     }
 
     if (!response.ok) {
+      if(response.status===401 && authToken && !endpoint.startsWith('/auth/'))window.dispatchEvent(new Event('pms:session-expired'));
       const errorMessage =
         (responseData && responseData.message) ||
         `Request failed with status ${response.status}`;
@@ -76,7 +77,7 @@ export const apiRequest = async (endpoint, options = {}) => {
     }
     // Network or parse error
     throw new ApiError(
-      error.message || 'Network error: unable to reach the server. Please check your connection.',
+      'Unable to reach the server. Check your connection and try again.',
       0,
       null
     );

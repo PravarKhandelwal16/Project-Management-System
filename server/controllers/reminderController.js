@@ -3,7 +3,7 @@ const taskModel = require('../models/taskModel');
 const { projectInScope, hasPermission } = require('../services/accessService');
 const { createAuditLog } = require('../models/auditModel');
 const fail = (status, message) => { const error = new Error(message); error.statusCode = status; return error; };
-const identifier = value => { const id = Number(value); if (!Number.isSafeInteger(id) || id < 1) throw fail(400, 'Invalid reminder or task ID.'); return id; };
+const identifier = value => { if (!require('../middleware/inputValidation').validateIdentifier(value)) throw fail(400, 'Invalid reminder or task ID.'); return Number(value); };
 const selection = "SELECT r.id, r.user_id, r.task_id, r.title, r.notes, r.status, DATE_FORMAT(r.remind_at, '%Y-%m-%dT%H:%i:%sZ') AS remind_at, r.sent_at, r.created_at FROM reminders r";
 function validate(body) {
   if (typeof body.title !== 'string' || !body.title.trim() || body.title.trim().length > 255) throw fail(400, 'Reminder title must be between 1 and 255 characters.');
@@ -50,6 +50,7 @@ const create = async (req,res,next) => {
 const update = async (req,res,next) => {
   try {
     const id = identifier(req.params.id);
+    if (req.body.status !== undefined && !['scheduled','dismissed'].includes(req.body.status)) throw fail(400,'Invalid reminder status.');
     const dismiss = req.body.status === 'dismissed';
     const data = dismiss ? null : validate(req.body);
     if (data) await verifyTask(req.user,data.task_id);

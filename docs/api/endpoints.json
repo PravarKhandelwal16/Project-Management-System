@@ -1,0 +1,707 @@
+[
+  [
+    "GET",
+    "/health",
+    "Operations",
+    "Process liveness",
+    []
+  ],
+  [
+    "GET",
+    "/ready",
+    "Operations",
+    "Database readiness",
+    []
+  ],
+  [
+    "POST",
+    "/auth/register",
+    "Auth",
+    "Register a Team Member",
+    [],
+    {
+      "full_name": "Test Person",
+      "email": "{{email}}",
+      "password": "{{password}}"
+    }
+  ],
+  [
+    "POST",
+    "/auth/login",
+    "Auth",
+    "Login; save returned token",
+    [],
+    {
+      "email": "{{email}}",
+      "password": "{{password}}"
+    }
+  ],
+  [
+    "POST",
+    "/auth/logout",
+    "Auth",
+    "Acknowledge client logout",
+    [
+      "authenticated"
+    ]
+  ],
+  [
+    "GET",
+    "/auth/me",
+    "Auth",
+    "Current user and effective permissions",
+    [
+      "authenticated"
+    ]
+  ],
+  [
+    "GET",
+    "/projects",
+    "Projects",
+    "Scoped project list",
+    [
+      "projects.view"
+    ],
+    null,
+    [
+      "search",
+      "status",
+      "sortBy",
+      "sortOrder"
+    ]
+  ],
+  [
+    "POST",
+    "/projects",
+    "Projects",
+    "Create owned project",
+    [
+      "projects.view",
+      "projects.create"
+    ],
+    {
+      "name": "Release project",
+      "description": "Quality review",
+      "status": "Not Started",
+      "start_date": "2028-01-01",
+      "end_date": "2028-12-31"
+    }
+  ],
+  [
+    "GET",
+    "/projects/{id}",
+    "Projects",
+    "Project details and members",
+    [
+      "projects.view"
+    ]
+  ],
+  [
+    "PUT",
+    "/projects/{id}",
+    "Projects",
+    "Edit scoped project",
+    [
+      "projects.view",
+      "projects.edit"
+    ],
+    {
+      "name": "Updated release project",
+      "status": "In Progress"
+    }
+  ],
+  [
+    "DELETE",
+    "/projects/{id}",
+    "Projects",
+    "Delete project and its tasks",
+    [
+      "projects.view",
+      "projects.delete"
+    ]
+  ],
+  [
+    "GET",
+    "/projects/{id}/members",
+    "Team",
+    "Project members",
+    [
+      "projects.view"
+    ]
+  ],
+  [
+    "POST",
+    "/projects/{id}/members",
+    "Team",
+    "Add active member",
+    [
+      "projects.view",
+      "team.manage"
+    ],
+    {
+      "user_id": "{{userId}}"
+    }
+  ],
+  [
+    "DELETE",
+    "/projects/{id}/members/{userId}",
+    "Team",
+    "Remove member without open tasks",
+    [
+      "projects.view",
+      "team.manage"
+    ]
+  ],
+  [
+    "GET",
+    "/projects/{id}/tasks",
+    "Tasks",
+    "Scoped project tasks",
+    [
+      "projects.view",
+      "tasks.view"
+    ],
+    null,
+    [
+      "search",
+      "status",
+      "priority",
+      "sortBy",
+      "order"
+    ]
+  ],
+  [
+    "GET",
+    "/tasks",
+    "Tasks",
+    "Scoped tasks",
+    [
+      "tasks.view"
+    ],
+    null,
+    [
+      "project_id",
+      "assigned_to",
+      "search",
+      "status",
+      "priority",
+      "sortBy",
+      "order"
+    ]
+  ],
+  [
+    "POST",
+    "/tasks",
+    "Tasks",
+    "Create task; assignment needs tasks.assign",
+    [
+      "projects.view",
+      "tasks.view",
+      "tasks.create"
+    ],
+    {
+      "project_id": "{{projectId}}",
+      "name": "Review quality checklist",
+      "description": "Check tests",
+      "status": "Pending",
+      "priority": "High",
+      "due_date": "2028-12-01",
+      "assigned_to": null
+    }
+  ],
+  [
+    "GET",
+    "/tasks/{id}",
+    "Tasks",
+    "Task details",
+    [
+      "projects.view",
+      "tasks.view"
+    ]
+  ],
+  [
+    "PUT",
+    "/tasks/{id}",
+    "Tasks",
+    "Edit task; status/assignee also require their permissions",
+    [
+      "projects.view",
+      "tasks.view",
+      "tasks.edit"
+    ],
+    {
+      "name": "Updated quality checklist",
+      "priority": "Medium"
+    }
+  ],
+  [
+    "PATCH",
+    "/tasks/{id}/assign",
+    "Tasks",
+    "Assign, reassign or unassign",
+    [
+      "projects.view",
+      "tasks.view",
+      "tasks.assign"
+    ],
+    {
+      "assigned_to": "{{userId}}"
+    }
+  ],
+  [
+    "PATCH",
+    "/tasks/{id}/status",
+    "Tasks",
+    "Change status; tasks.status_assigned also permits own assignments",
+    [
+      "projects.view",
+      "tasks.view"
+    ],
+    {
+      "status": "Completed"
+    }
+  ],
+  [
+    "PATCH",
+    "/tasks/{id}/priority",
+    "Tasks",
+    "Change priority",
+    [
+      "projects.view",
+      "tasks.view",
+      "tasks.edit"
+    ],
+    {
+      "priority": "High"
+    }
+  ],
+  [
+    "DELETE",
+    "/tasks/{id}",
+    "Tasks",
+    "Delete task",
+    [
+      "projects.view",
+      "tasks.view",
+      "tasks.delete"
+    ]
+  ],
+  [
+    "GET",
+    "/dashboard",
+    "Reports",
+    "Scoped dashboard and personal reminders",
+    [
+      "authenticated"
+    ],
+    null,
+    [
+      "tz"
+    ]
+  ],
+  [
+    "GET",
+    "/analytics",
+    "Reports",
+    "Scoped reporting",
+    [
+      "projects.view",
+      "tasks.view",
+      "analytics.view"
+    ],
+    null,
+    [
+      "project_id",
+      "days",
+      "tz"
+    ]
+  ],
+  [
+    "GET",
+    "/search",
+    "Search",
+    "Global search; result types follow permissions",
+    [
+      "authenticated"
+    ],
+    null,
+    [
+      "q"
+    ]
+  ],
+  [
+    "GET",
+    "/team/projects/{id}",
+    "Team",
+    "Scoped roster and workload",
+    [
+      "projects.view",
+      "team.view"
+    ]
+  ],
+  [
+    "GET",
+    "/team/projects/{id}/candidates",
+    "Team",
+    "Eligible active accounts, max 50",
+    [
+      "projects.view",
+      "team.view",
+      "team.manage"
+    ],
+    null,
+    [
+      "search"
+    ]
+  ],
+  [
+    "GET",
+    "/notifications",
+    "Notifications",
+    "Own notifications",
+    [
+      "authenticated"
+    ],
+    null,
+    [
+      "limit",
+      "offset"
+    ]
+  ],
+  [
+    "GET",
+    "/notifications/unread-count",
+    "Notifications",
+    "Own unread count",
+    [
+      "authenticated"
+    ]
+  ],
+  [
+    "PATCH",
+    "/notifications/{id}/read",
+    "Notifications",
+    "Mark owned notification read",
+    [
+      "authenticated"
+    ]
+  ],
+  [
+    "PATCH",
+    "/notifications/read-all",
+    "Notifications",
+    "Mark all own notifications read",
+    [
+      "authenticated"
+    ]
+  ],
+  [
+    "GET",
+    "/notifications/preferences",
+    "Notifications",
+    "Get own preferences",
+    [
+      "authenticated"
+    ]
+  ],
+  [
+    "PUT",
+    "/notifications/preferences",
+    "Notifications",
+    "Update boolean preferences",
+    [
+      "authenticated"
+    ],
+    {
+      "email_task_assigned": true,
+      "email_due_tomorrow": true,
+      "email_overdue": true,
+      "web_task_assigned": true,
+      "web_due_tomorrow": true,
+      "web_overdue": true,
+      "browser_task_assigned": false,
+      "browser_due_tomorrow": false
+    }
+  ],
+  [
+    "GET",
+    "/reminders",
+    "Calendar",
+    "Own personal reminders",
+    [
+      "authenticated"
+    ],
+    null,
+    [
+      "task_id",
+      "status"
+    ]
+  ],
+  [
+    "POST",
+    "/reminders",
+    "Calendar",
+    "Create future personal reminder",
+    [
+      "authenticated"
+    ],
+    {
+      "title": "Review release",
+      "notes": "Personal",
+      "remind_at": "2030-01-01T09:00:00Z",
+      "task_id": null
+    }
+  ],
+  [
+    "PUT",
+    "/reminders/{id}",
+    "Calendar",
+    "Edit/reschedule or dismiss reminder",
+    [
+      "authenticated"
+    ],
+    {
+      "status": "dismissed"
+    }
+  ],
+  [
+    "DELETE",
+    "/reminders/{id}",
+    "Calendar",
+    "Delete owned reminder",
+    [
+      "authenticated"
+    ]
+  ],
+  [
+    "GET",
+    "/calendar/events",
+    "Calendar",
+    "Own events",
+    [
+      "authenticated"
+    ]
+  ],
+  [
+    "POST",
+    "/calendar/events",
+    "Calendar",
+    "Create personal event",
+    [
+      "authenticated"
+    ],
+    {
+      "title": "Release review",
+      "event_date": "2028-12-01",
+      "start_time": "09:00",
+      "end_time": "10:00",
+      "notes": "Personal calendar entry"
+    }
+  ],
+  [
+    "PUT",
+    "/calendar/events/{id}",
+    "Calendar",
+    "Edit personal event",
+    [
+      "authenticated"
+    ],
+    {
+      "title": "Release review",
+      "event_date": "2028-12-01",
+      "start_time": null,
+      "end_time": null,
+      "notes": "All day"
+    }
+  ],
+  [
+    "DELETE",
+    "/calendar/events/{id}",
+    "Calendar",
+    "Delete owned event",
+    [
+      "authenticated"
+    ]
+  ],
+  [
+    "GET",
+    "/calendar/colours",
+    "Calendar",
+    "Own colour choices",
+    [
+      "authenticated"
+    ]
+  ],
+  [
+    "PUT",
+    "/calendar/colours",
+    "Calendar",
+    "Save category/item colour",
+    [
+      "authenticated"
+    ],
+    {
+      "key": "task",
+      "colour": "#2563eb"
+    }
+  ],
+  [
+    "DELETE",
+    "/calendar/colours",
+    "Calendar",
+    "Reset own colours",
+    [
+      "authenticated"
+    ]
+  ],
+  [
+    "GET",
+    "/admin/users",
+    "Admin",
+    "Admin-only account directory",
+    [
+      "users.view"
+    ],
+    null,
+    [
+      "search",
+      "role",
+      "is_active",
+      "page",
+      "limit"
+    ]
+  ],
+  [
+    "POST",
+    "/admin/users",
+    "Admin",
+    "Create account; privileged roles need users.roles",
+    [
+      "users.create"
+    ],
+    {
+      "full_name": "New Member",
+      "email": "{{newEmail}}",
+      "password": "{{password}}",
+      "role": "member",
+      "department": "Delivery",
+      "job_title": "Contributor"
+    }
+  ],
+  [
+    "GET",
+    "/admin/users/{id}",
+    "Admin",
+    "Account details",
+    [
+      "users.view"
+    ]
+  ],
+  [
+    "PUT",
+    "/admin/users/{id}",
+    "Admin",
+    "Edit protected-level account profile",
+    [
+      "users.edit"
+    ],
+    {
+      "full_name": "Updated Member",
+      "email": "{{newEmail}}",
+      "department": "Delivery",
+      "job_title": "Contributor"
+    }
+  ],
+  [
+    "PATCH",
+    "/admin/users/{id}/role",
+    "Admin",
+    "Change role; protected admin boundaries",
+    [
+      "users.roles"
+    ],
+    {
+      "role": "member"
+    }
+  ],
+  [
+    "PATCH",
+    "/admin/users/{id}/status",
+    "Admin",
+    "Activate/deactivate; preserve active Super Admin",
+    [
+      "users.status"
+    ],
+    {
+      "is_active": false
+    }
+  ],
+  [
+    "PUT",
+    "/admin/users/{id}/permissions",
+    "Admin",
+    "Set boolean overrides or null",
+    [
+      "users.roles"
+    ],
+    {
+      "overrides": {
+        "tasks.create": false
+      }
+    }
+  ],
+  [
+    "GET",
+    "/admin/roles",
+    "Admin",
+    "Policies and permission catalog",
+    [
+      "users.view"
+    ]
+  ],
+  [
+    "PUT",
+    "/admin/roles/{role}",
+    "Admin",
+    "Update policy with optimistic version",
+    [
+      "roles.manage"
+    ],
+    {
+      "permissions": [
+        "projects.view",
+        "tasks.view"
+      ],
+      "version": 1
+    }
+  ],
+  [
+    "GET",
+    "/admin/stats",
+    "Admin",
+    "User/role statistics",
+    [
+      "users.view"
+    ]
+  ],
+  [
+    "GET",
+    "/admin/audit-logs",
+    "Audit",
+    "Admin audit history",
+    [
+      "audit.view"
+    ],
+    null,
+    [
+      "search",
+      "action",
+      "resource_type",
+      "user_id",
+      "from",
+      "to",
+      "page",
+      "limit"
+    ]
+  ]
+]

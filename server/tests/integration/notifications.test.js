@@ -1,0 +1,55 @@
+const {test}=require('node:test'),assert=require('node:assert/strict');
+const {pool,request,ids,createTask,emailMocks}=require('../helpers/fixtures');
+const {runReminders}=require('../../jobs/taskReminderJob');
+const {todayInZone,shiftDay}=require('../../utils/notificationDates');
+test('assignment notifications respect recipients/preferences and email failure does not fail the request',async()=>{
+  const mock=emailMocks.sendTaskAssignedEmail.mock,initial=mock.callCount();
+  const made=await request('project_manager','/tasks','POST',{project_id:1,name:'Notify member',assigned_to:ids.member});assert.equal(made.status,201);assert.equal(mock.callCount(),initial+1);assert.equal(mock.calls.at(-1).arguments[0].email,'member@isolated.test');
+  const notifications=(await request('member','/notifications')).data.data;assert.ok(notifications.some(n=>n.resource_id===made.data.data.id&&n.type==='TASK_ASSIGNED'));
+  await request('member','/notifications/preferences','PUT',{email_task_assigned:false,web_task_assigned:false});
+  await request('project_manager','/tasks','POST',{project_id:1,name:'Muted',assigned_to:ids.member});assert.equal(mock.callCount(),initial+1);
+  await request('member','/notifications/preferences','PUT',{email_task_assigned:true,web_task_assigned:true});
+  mock.mockImplementation(async()=>{throw Object.assign(new Error('Do not log credentials'),{code:'ESMTP_TEST'});});
+  assert.equal((await request('project_manager','/tasks','POST',{project_id:1,name:'Email failure is isolated',assigned_to:ids.member})).status,201);
+  mock.mockImplementation(async()=>({messageId:'isolated-test'}));
+  const [failed]=await pool.query("SELECT * FROM notification_logs WHERE status='FAILED'");assert.equal(failed[0].error_message,'ESMTP_TEST');
+});
+test('assignment retries and concurrent identical assignments emit one notification',async()=>{
+  const id=await createTask(1,{name:'Assign once'}),before=emailMocks.sendTaskAssignedEmail.mock.callCount();
+  const results=await Promise.all(Array.from({length:3},()=>request('project_manager','/tasks/'+id+'/assign','PATCH',{assigned_to:ids.member})));
+  assert.ok(results.every(result=>result.status===200));
+  assert.equal(emailMocks.sendTaskAssignedEmail.mock.callCount(),before+1);
+  const [rows]=await pool.execute("SELECT id FROM notifications WHERE resource_id=? AND resource_type='TASK' AND type IN ('TASK_ASSIGNED','TASK_REASSIGNED')",[id]);assert.equal(rows.length,1);
+  assert.equal((await request('project_manager','/tasks/'+id+'/assign','PATCH',{assigned_to:ids.member})).status,200);
+  assert.equal(emailMocks.sendTaskAssignedEmail.mock.callCount(),before+1);
+});
+test('notification reads are private, idempotent and mark-all affects only the current user',async()=>{
+  const list=(await request('member','/notifications')).data.data,id=list[0].id;
+  assert.equal((await request('admin','/notifications/'+id+'/read','PATCH')).status,404);
+  assert.equal((await request('member','/notifications/'+id+'/read','PATCH')).status,200);
+  assert.equal((await request('member','/notifications/'+id+'/read','PATCH')).status,200);
+  assert.equal((await request('member','/notifications/read-all','PATCH')).status,200);
+  assert.equal((await request('member','/notifications/unread-count')).data.data.count,0);
+  for(const body of [{web_overdue:'no'},{user_id:ids.admin}])assert.equal((await request('member','/notifications/preferences','PUT',body)).status,400);
+  assert.equal((await request('member','/notifications?limit=-1')).status,400);
+});
+test('daily jobs cover due/overdue/completed/preference rules and overlapping workers deduplicate',async()=>{
+  const today=todayInZone(process.env.APP_TIMEZONE||'Asia/Kolkata');
+  const due=await createTask(1,{name:'Tomorrow',assigned_to:ids.member,due_date:shiftDay(today,1)});
+  const completed=await createTask(1,{name:'Completed tomorrow',status:'Completed',assigned_to:ids.member,due_date:shiftDay(today,1)});
+  const overdue=await createTask(1,{name:'Overdue',assigned_to:ids.member,due_date:shiftDay(today,-1)});
+  await request('viewer','/notifications/preferences','PUT',{web_due_tomorrow:false,email_due_tomorrow:false});
+  const muted=await createTask(1,{name:'Muted tomorrow',assigned_to:ids.viewer,due_date:shiftDay(today,1)});
+  const initial=emailMocks.sendTaskReminderEmail.mock.callCount();
+  await Promise.all([runReminders(),runReminders(),runReminders()]);
+  const [logs]=await pool.query('SELECT * FROM notification_logs WHERE delivery_key IS NOT NULL');
+  assert.equal(new Set(logs.map(row=>row.delivery_key)).size,logs.length);
+  assert.equal(logs.filter(log=>log.task_id===due).length,2);assert.equal(logs.filter(log=>log.task_id===overdue).length,2);
+  assert.equal(logs.filter(log=>log.task_id===completed||log.task_id===muted).length,0);
+  assert.equal(emailMocks.sendTaskReminderEmail.mock.callCount(),initial+1);
+  await runReminders();assert.equal(emailMocks.sendTaskReminderEmail.mock.callCount(),initial+1);
+  const failed=await createTask(1,{name:'Fail due email',assigned_to:ids.team_lead,due_date:shiftDay(today,1)});
+  emailMocks.sendTaskReminderEmail.mock.mockImplementation(async()=>{throw Object.assign(new Error('SMTP failed'),{code:'ESMTP_TEST'});});
+  await assert.doesNotReject(runReminders());
+  assert.equal((await pool.execute("SELECT status FROM notification_logs WHERE task_id=? AND channel='EMAIL'",[failed]))[0][0].status,'FAILED');
+});

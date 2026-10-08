@@ -1,9 +1,6 @@
 const mysql = require('mysql2/promise');
-const path = require('path');
-
-// Ensure environment variables are loaded regardless of execution directory
-require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
-require('dotenv').config({ path: path.resolve(__dirname, '../../.env') });
+require('./env');
+const fs = require('node:fs');
 
 // Create MySQL connection pool
 const pool = mysql.createPool({
@@ -13,9 +10,15 @@ const pool = mysql.createPool({
   database: process.env.DB_NAME || 'project_management',
   port: Number(process.env.DB_PORT) || 3306,
   waitForConnections: true,
-  connectionLimit: 10,
-  queueLimit: 0,
+  connectionLimit: Number(process.env.DB_POOL_SIZE)||10,
+  queueLimit: 100,
+  timezone: 'Z',
+  charset: 'utf8mb4',
+  connectTimeout: 10000,
+  ...(process.env.DB_SSL==='true'?{ssl:{rejectUnauthorized:true,...(process.env.DB_SSL_CA?{ca:fs.readFileSync(process.env.DB_SSL_CA)}:{})}}:{}),
 });
+
+pool.on('connection', connection => connection.query("SET time_zone = '+00:00'"));
 
 /**
  * Verify database connectivity
@@ -23,12 +26,16 @@ const pool = mysql.createPool({
 const testConnection = async () => {
   try {
     const connection = await pool.getConnection();
-    console.log(`[Database] Connected successfully to MySQL (${process.env.DB_NAME || 'project_management'})`);
+    try {
+      await connection.query('SELECT role_key FROM role_permissions LIMIT 1');
+      await connection.query('SELECT delivery_key FROM notification_logs LIMIT 1');
+      await connection.query('SELECT id FROM reminders LIMIT 1');
+      await connection.query('SELECT id FROM calendar_events LIMIT 1');
+    } catch (error) { connection.release(); throw error; }
     connection.release();
     return true;
   } catch (error) {
-    console.error(`[Database Error] Could not connect to MySQL: ${error.message}`);
-    return false;
+    throw error;
   }
 };
 

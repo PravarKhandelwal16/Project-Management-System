@@ -1,0 +1,3928 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Project Management System",
+    "version": "1.0.0",
+    "description": "Stage 7 API reference. API.md documents payload rules, examples, queries and dynamic authorization."
+  },
+  "servers": [
+    {
+      "url": "http://localhost:5000/api",
+      "description": "Local development"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    }
+  },
+  "paths": {
+    "/health": {
+      "get": {
+        "tags": [
+          "Operations"
+        ],
+        "summary": "Process liveness",
+        "description": "Public endpoint.",
+        "security": [],
+        "parameters": [],
+        "x-required-permissions": [],
+        "responses": {
+          "200": {
+            "description": "Success; see API.md response envelopes"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Missing/invalid/expired token"
+          },
+          "403": {
+            "description": "Permission, scope or origin denied"
+          },
+          "404": {
+            "description": "Resource not found"
+          },
+          "409": {
+            "description": "Duplicate, protected state or concurrent update"
+          },
+          "429": {
+            "description": "Authentication rate limit"
+          },
+          "500": {
+            "description": "Safe internal error"
+          }
+        }
+      }
+    },
+    "/ready": {
+      "get": {
+        "tags": [
+          "Operations"
+        ],
+        "summary": "Database readiness",
+        "description": "Public endpoint.",
+        "security": [],
+        "parameters": [],
+        "x-required-permissions": [],
+        "responses": {
+          "200": {
+            "description": "Success; see API.md response envelopes"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Missing/invalid/expired token"
+          },
+          "403": {
+            "description": "Permission, scope or origin denied"
+          },
+          "404": {
+            "description": "Resource not found"
+          },
+          "409": {
+            "description": "Duplicate, protected state or concurrent update"
+          },
+          "429": {
+            "description": "Authentication rate limit"
+          },
+          "500": {
+            "description": "Safe internal error"
+          }
+        }
+      }
+    },
+    "/auth/register": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Register a Team Member",
+        "description": "Public endpoint.",
+        "security": [],
+        "parameters": [],
+        "x-required-permissions": [],
+        "responses": {
+          "200": {
+            "description": "Success; see API.md response envelopes"
+          },
+          "201": {
+            "description": "Created"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Missing/invalid/expired token"
+          },
+          "403": {
+            "description": "Permission, scope or origin denied"
+          },
+          "404": {
+            "description": "Resource not found"
+          },
+          "409": {
+            "description": "Duplicate, protected state or concurrent update"
+          },
+          "429": {
+            "description": "Authentication rate limit"
+          },
+          "500": {
+            "description": "Safe internal error"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "full_name": {
+                    "type": "string",
+                    "nullable": false
+                  },
+                  "email": {
+                    "type": "string",
+                    "format": "email"
+                  },
+                  "password": {
+                    "type": "string",
+                    "format": "password",
+                    "minLength": 8,
+                    "maxLength": 72,
+                    "writeOnly": true,
+                    "description": "At most 72 UTF-8 bytes; new passwords need a letter and number."
+                  }
+                },
+                "required": [
+                  "full_name",
+                  "email",
+                  "password"
+                ]
+              },
+              "example": {
+                "full_name": "Test Person",
+                "email": "{{email}}",
+                "password": "{{password}}"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/login": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Login; save returned token",
+        "description": "Public endpoint.",
+        "security": [],
+        "parameters": [],
+        "x-required-permissions": [],
+        "responses": {
+          "200": {
+            "description": "Success; see API.md response envelopes"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Missing/invalid/expired token"
+          },
+          "403": {
+            "description": "Permission, scope or origin denied"
+          },
+          "404": {
+            "description": "Resource not found"
+          },
+          "409": {
+            "description": "Duplicate, protected state or concurrent update"
+          },
+          "429": {
+            "description": "Authentication rate limit"
+          },
+          "500": {
+            "description": "Safe internal error"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "format": "email"
+                  },
+                  "password": {
+                    "type": "string",
+                    "format": "password",
+                    "minLength": 1,
+                    "maxLength": 72,
+                    "writeOnly": true,
+                    "description": "At most 72 UTF-8 bytes; new passwords need a letter and number."
+                  }
+                },
+                "required": [
+                  "email",
+                  "password"
+                ]
+              },
+              "example": {
+                "email": "{{email}}",
+                "password": "{{password}}"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/logout": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Acknowledge client logout",
+        "description": "Requires an active authenticated account.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [],
+        "x-required-permissions": [
+          "authenticated"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success; see API.md response envelopes"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Missing/invalid/expired token"
+          },
+          "403": {
+            "description": "Permission, scope or origin denied"
+          },
+          "404": {
+            "description": "Resource not found"
+          },
+          "409": {
+            "description": "Duplicate, protected state or concurrent update"
+          },
+          "429": {
+            "description": "Authentication rate limit"
+          },
+          "500": {
+            "description": "Safe internal error"
+          }
+        }
+      }
+    },
+    "/auth/me": {
+      "get": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Current user and effective permissions",
+        "description": "Requires an active authenticated account.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [],
+        "x-required-permissions": [
+          "authenticated"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success; see API.md response envelopes"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Missing/invalid/expired token"
+          },
+          "403": {
+            "description": "Permission, scope or origin denied"
+          },
+          "404": {
+            "description": "Resource not found"
+          },
+          "409": {
+            "description": "Duplicate, protected state or concurrent update"
+          },
+          "429": {
+            "description": "Authentication rate limit"
+          },
+          "500": {
+            "description": "Safe internal error"
+          }
+        }
+      }
+    },
+    "/projects": {
+      "get": {
+        "tags": [
+          "Projects"
+        ],
+        "summary": "Scoped project list",
+        "description": "Required effective permissions: projects.view. Resource routes also enforce ownership/membership or projects.view_all. Admin routes always require admin/super_admin.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "search",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortBy",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortOrder",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "x-required-permissions": [
+          "projects.view"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success; see API.md response envelopes"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Missing/invalid/expired token"
+          },
+          "403": {
+            "description": "Permission, scope or origin denied"
+          },
+          "404": {
+            "description": "Resource not found"
+          },
+          "409": {
+            "description": "Duplicate, protected state or concurrent update"
+          },
+          "429": {
+            "description": "Authentication rate limit"
+          },
+          "500": {
+            "description": "Safe internal error"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Projects"
+        ],
+        "summary": "Create owned project",
+        "description": "Required effective permissions: projects.view, projects.create. Resource routes also enforce ownership/membership or projects.view_all. Admin routes always require admin/super_admin.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [],
+        "x-required-permissions": [
+          "projects.view",
+          "projects.create"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success; see API.md response envelopes"
+          },
+          "201": {
+            "description": "Created"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Missing/invalid/expired token"
+          },
+          "403": {
+            "description": "Permission, scope or origin denied"
+          },
+          "404": {
+            "description": "Resource not found"
+          },
+          "409": {
+            "description": "Duplicate, protected state or concurrent update"
+          },
+          "429": {
+            "description": "Authentication rate limit"
+          },
+          "500": {
+            "description": "Safe internal error"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "nullable": false
+                  },
+                  "description": {
+                    "type": "string",
+                    "nullable": false
+                  },
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "Not Started",
+                      "In Progress",
+                      "Completed"
+                    ]
+                  },
+                  "start_date": {
+                    "type": "string",
+                    "format": "date",
+                    "nullable": true
+                  },
+                  "end_date": {
+                    "type": "string",
+                    "format": "date",
+                    "nullable": true
+                  }
+                },
+                "required": [
+                  "name"
+                ]
+              },
+              "example": {
+                "name": "Release project",
+                "description": "Quality review",
+                "status": "Not Started",
+                "start_date": "2028-01-01",
+                "end_date": "2028-12-31"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/projects/{id}": {
+      "get": {
+        "tags": [
+          "Projects"
+        ],
+        "summary": "Project details and members",
+        "description": "Required effective permissions: projects.view. Resource routes also enforce ownership/membership or projects.view_all. Admin routes always require admin/super_admin.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        ],
+        "x-required-permissions": [
+          "projects.view"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success; see API.md response envelopes"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Missing/invalid/expired token"
+          },
+          "403": {
+            "description": "Permission, scope or origin denied"
+          },
+          "404": {
+            "description": "Resource not found"
+          },
+          "409": {
+            "description": "Duplicate, protected state or concurrent update"
+          },
+          "429": {
+            "description": "Authentication rate limit"
+          },
+          "500": {
+            "description": "Safe internal error"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Projects"
+        ],
+        "summary": "Edit scoped project",
+        "description": "Required effective permissions: projects.view, projects.edit. Resource routes also enforce ownership/membership or projects.view_all. Admin routes always require admin/super_admin.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        ],
+        "x-required-permissions": [
+          "projects.view",
+          "projects.edit"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success; see API.md response envelopes"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Missing/invalid/expired token"
+          },
+          "403": {
+            "description": "Permission, scope or origin denied"
+          },
+          "404": {
+            "description": "Resource not found"
+          },
+          "409": {
+            "description": "Duplicate, protected state or concurrent update"
+          },
+          "429": {
+            "description": "Authentication rate limit"
+          },
+          "500": {
+            "description": "Safe internal error"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "nullable": false
+                  },
+                  "description": {
+                    "type": "string",
+                    "nullable": false
+                  },
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "Not Started",
+                      "In Progress",
+                      "Completed"
+                    ]
+                  },
+                  "start_date": {
+                    "type": "string",
+                    "format": "date",
+                    "nullable": true
+                  },
+                  "end_date": {
+                    "type": "string",
+                    "format": "date",
+                    "nullable": true
+                  }
+                }
+              },
+              "example": {
+                "name": "Updated release project",
+                "status": "In Progress"
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Projects"
+        ],
+        "summary": "Delete project and its tasks",
+        "description": "Required effective permissions: projects.view, projects.delete. Resource routes also enforce ownership/membership or projects.view_all. Admin routes always require admin/super_admin.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        ],
+        "x-required-permissions": [
+          "projects.view",
+          "projects.delete"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success; see API.md response envelopes"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Missing/invalid/expired token"
+          },
+          "403": {
+            "description": "Permission, scope or origin denied"
+          },
+          "404": {
+            "description": "Resource not found"
+          },
+          "409": {
+            "description": "Duplicate, protected state or concurrent update"
+          },
+          "429": {
+            "description": "Authentication rate limit"
+          },
+          "500": {
+            "description": "Safe internal error"
+          }
+        }
+      }
+    },
+    "/projects/{id}/members": {
+      "get": {
+        "tags": [
+          "Team"
+        ],
+        "summary": "Project members",
+        "description": "Required effective permissions: projects.view. Resource routes also enforce ownership/membership or projects.view_all. Admin routes always require admin/super_admin.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        ],
+        "x-required-permissions": [
+          "projects.view"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success; see API.md response envelopes"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Missing/invalid/expired token"
+          },
+          "403": {
+            "description": "Permission, scope or origin denied"
+          },
+          "404": {
+            "description": "Resource not found"
+          },
+          "409": {
+            "description": "Duplicate, protected state or concurrent update"
+          },
+          "429": {
+            "description": "Authentication rate limit"
+          },
+          "500": {
+            "description": "Safe internal error"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Team"
+        ],
+        "summary": "Add active member",
+        "description": "Required effective permissions: projects.view, team.manage. Resource routes also enforce ownership/membership or projects.view_all. Admin routes always require admin/super_admin.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        ],
+        "x-required-permissions": [
+          "projects.view",
+          "team.manage"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success; see API.md response envelopes"
+          },
+          "201": {
+            "description": "Created"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Missing/invalid/expired token"
+          },
+          "403": {
+            "description": "Permission, scope or origin denied"
+          },
+          "404": {
+            "description": "Resource not found"
+          },
+          "409": {
+            "description": "Duplicate, protected state or concurrent update"
+          },
+          "429": {
+            "description": "Authentication rate limit"
+          },
+          "500": {
+            "description": "Safe internal error"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "user_id": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "nullable": false
+                  }
+                },
+                "required": [
+                  "user_id"
+                ]
+              },
+              "example": {
+                "user_id": "{{userId}}"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/projects/{id}/members/{userId}": {
+      "delete": {
+        "tags": [
+          "Team"
+        ],
+        "summary": "Remove member without open tasks",
+        "description": "Required effective permissions: projects.view, team.manage. Resource routes also enforce ownership/membership or projects.view_all. Admin routes always require admin/super_admin.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          },
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        ],
+        "x-required-permissions": [
+          "projects.view",
+          "team.manage"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success; see API.md response envelopes"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Missing/invalid/expired token"
+          },
+          "403": {
+            "description": "Permission, scope or origin denied"
+          },
+          "404": {
+            "description": "Resource not found"
+          },
+          "409": {
+            "description": "Duplicate, protected state or concurrent update"
+          },
+          "429": {
+            "description": "Authentication rate limit"
+          },
+          "500": {
+            "description": "Safe internal error"
+          }
+        }
+      }
+    },
+    "/projects/{id}/tasks": {
+      "get": {
+        "tags": [
+          "Tasks"
+        ],
+        "summary": "Scoped project tasks",
+        "description": "Required effective permissions: projects.view, tasks.view. Resource routes also enforce ownership/membership or projects.view_all. Admin routes always require admin/super_admin.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "priority",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortBy",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "order",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "x-required-permissions": [
+          "projects.view",
+          "tasks.view"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success; see API.md response envelopes"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Missing/invalid/expired token"
+          },
+          "403": {
+            "description": "Permission, scope or origin denied"
+          },
+          "404": {
+            "description": "Resource not found"
+          },
+          "409": {
+            "description": "Duplicate, protected state or concurrent update"
+          },
+          "429": {
+            "description": "Authentication rate limit"
+          },
+          "500": {
+            "description": "Safe internal error"
+          }
+        }
+      }
+    },
+    "/tasks": {
+      "get": {
+        "tags": [
+          "Tasks"
+        ],
+        "summary": "Scoped tasks",
+        "description": "Required effective permissions: tasks.view. Resource routes also enforce ownership/membership or projects.view_all. Admin routes always require admin/super_admin.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "assigned_to",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "priority",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortBy",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "order",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "x-required-permissions": [
+          "tasks.view"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success; see API.md response envelopes"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Missing/invalid/expired token"
+          },
+          "403": {
+            "description": "Permission, scope or origin denied"
+          },
+          "404": {
+            "description": "Resource not found"
+          },
+          "409": {
+            "description": "Duplicate, protected state or concurrent update"
+          },
+          "429": {
+            "description": "Authentication rate limit"
+          },
+          "500": {
+            "description": "Safe internal error"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Tasks"
+        ],
+        "summary": "Create task; assignment needs tasks.assign",
+        "description": "Required effective permissions: projects.view, tasks.view, tasks.create. Resource routes also enforce ownership/membership or projects.view_all. Admin routes always require admin/super_admin.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [],
+        "x-required-permissions": [
+          "projects.view",
+          "tasks.view",
+          "tasks.create"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success; see API.md response envelopes"
+          },
+          "201": {
+            "description": "Created"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Missing/invalid/expired token"
+          },
+          "403": {
+            "description": "Permission, scope or origin denied"
+          },
+          "404": {
+            "description": "Resource not found"
+          },
+          "409": {
+            "description": "Duplicate, protected state or concurrent update"
+          },
+          "429": {
+            "description": "Authentication rate limit"
+          },
+          "500": {
+            "description": "Safe internal error"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "project_id": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "nullable": false
+                  },
+                  "name": {
+                    "type": "string",
+                    "nullable": false
+                  },
+                  "description": {
+                    "type": "string",
+                    "nullable": false
+                  },
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "Pending",
+                      "In Progress",
+                      "Completed"
+                    ]
+                  },
+                  "priority": {
+                    "type": "string",
+                    "enum": [
+                      "Low",
+                      "Medium",
+                      "High"
+                    ]
+                  },
+                  "due_date": {
+                    "type": "string",
+                    "format": "date",
+                    "nullable": true
+                  },
+                  "assigned_to": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "nullable": true
+                  }
+                },
+                "required": [
+                  "project_id",
+                  "name"
+                ]
+              },
+              "example": {
+                "project_id": "{{projectId}}",
+                "name": "Review quality checklist",
+                "description": "Check tests",
+                "status": "Pending",
+                "priority": "High",
+                "due_date": "2028-12-01",
+                "assigned_to": null
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tasks/{id}": {
+      "get": {
+        "tags": [
+          "Tasks"
+        ],
+        "summary": "Task details",
+        "description": "Required effective permissions: projects.view, tasks.view. Resource routes also enforce ownership/membership or projects.view_all. Admin routes always require admin/super_admin.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        ],
+        "x-required-permissions": [
+          "projects.view",
+          "tasks.view"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success; see API.md response envelopes"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Missing/invalid/expired token"
+          },
+          "403": {
+            "description": "Permission, scope or origin denied"
+          },
+          "404": {
+            "description": "Resource not found"
+          },
+          "409": {
+            "description": "Duplicate, protected state or concurrent update"
+          },
+          "429": {
+            "description": "Authentication rate limit"
+          },
+          "500": {
+            "description": "Safe internal error"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Tasks"
+        ],
+        "summary": "Edit task; status/assignee also require their permissions",
+        "description": "Required effective permissions: projects.view, tasks.view, tasks.edit. Resource routes also enforce ownership/membership or projects.view_all. Admin routes always require admin/super_admin.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        ],
+        "x-required-permissions": [
+          "projects.view",
+          "tasks.view",
+          "tasks.edit"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success; see API.md response envelopes"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Missing/invalid/expired token"
+          },
+          "403": {
+            "description": "Permission, scope or origin denied"
+          },
+          "404": {
+            "description": "Resource not found"
+          },
+          "409": {
+            "description": "Duplicate, protected state or concurrent update"
+          },
+          "429": {
+            "description": "Authentication rate limit"
+          },
+          "500": {
+            "description": "Safe internal error"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "nullable": false
+                  },
+                  "description": {
+                    "type": "string",
+                    "nullable": false
+                  },
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "Pending",
+                      "In Progress",
+                      "Completed"
+                    ]
+                  },
+                  "priority": {
+                    "type": "string",
+                    "enum": [
+                      "Low",
+                      "Medium",
+                      "High"
+                    ]
+                  },
+                  "due_date": {
+                    "type": "string",
+                    "format": "date",
+                    "nullable": true
+                  },
+                  "assigned_to": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "nullable": true
+                  }
+                }
+              },
+              "example": {
+                "name": "Updated quality checklist",
+                "priority": "Medium"
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Tasks"
+        ],
+        "summary": "Delete task",
+        "description": "Required effective permissions: projects.view, tasks.view, tasks.delete. Resource routes also enforce ownership/membership or projects.view_all. Admin routes always require admin/super_admin.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        ],
+        "x-required-permissions": [
+          "projects.view",
+          "tasks.view",
+          "tasks.delete"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success; see API.md response envelopes"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Missing/invalid/expired token"
+          },
+          "403": {
+            "description": "Permission, scope or origin denied"
+          },
+          "404": {
+            "description": "Resource not found"
+          },
+          "409": {
+            "description": "Duplicate, protected state or concurrent update"
+          },
+          "429": {
+            "description": "Authentication rate limit"
+          },
+          "500": {
+            "description": "Safe internal error"
+          }
+        }
+      }
+    },
+    "/tasks/{id}/assign": {
+      "patch": {
+        "tags": [
+          "Tasks"
+        ],
+        "summary": "Assign, reassign or unassign",
+        "description": "Required effective permissions: projects.view, tasks.view, tasks.assign. Resource routes also enforce ownership/membership or projects.view_all. Admin routes always require admin/super_admin.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        ],
+        "x-required-permissions": [
+          "projects.view",
+          "tasks.view",
+          "tasks.assign"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success; see API.md response envelopes"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Missing/invalid/expired token"
+          },
+          "403": {
+            "description": "Permission, scope or origin denied"
+          },
+          "404": {
+            "description": "Resource not found"
+          },
+          "409": {
+            "description": "Duplicate, protected state or concurrent update"
+          },
+          "429": {
+            "description": "Authentication rate limit"
+          },
+          "500": {
+            "description": "Safe internal error"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "assigned_to": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "nullable": true
+                  }
+                },
+                "required": [
+                  "assigned_to"
+                ]
+              },
+              "example": {
+                "assigned_to": "{{userId}}"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tasks/{id}/status": {
+      "patch": {
+        "tags": [
+          "Tasks"
+        ],
+        "summary": "Change status; tasks.status_assigned also permits own assignments",
+        "description": "Required effective permissions: projects.view, tasks.view. Resource routes also enforce ownership/membership or projects.view_all. Admin routes always require admin/super_admin.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        ],
+        "x-required-permissions": [
+          "projects.view",
+          "tasks.view"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success; see API.md response envelopes"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Missing/invalid/expired token"
+          },
+          "403": {
+            "description": "Permission, scope or origin denied"
+          },
+          "404": {
+            "description": "Resource not found"
+          },
+          "409": {
+            "description": "Duplicate, protected state or concurrent update"
+          },
+          "429": {
+            "description": "Authentication rate limit"
+          },
+          "500": {
+            "description": "Safe internal error"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "Pending",
+                      "In Progress",
+                      "Completed"
+                    ]
+                  }
+                },
+                "required": [
+                  "status"
+                ]
+              },
+              "example": {
+                "status": "Completed"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tasks/{id}/priority": {
+      "patch": {
+        "tags": [
+          "Tasks"
+        ],
+        "summary": "Change priority",
+        "description": "Required effective permissions: projects.view, tasks.view, tasks.edit. Resource routes also enforce ownership/membership or projects.view_all. Admin routes always require admin/super_admin.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        ],
+        "x-required-permissions": [
+          "projects.view",
+          "tasks.view",
+          "tasks.edit"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success; see API.md response envelopes"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Missing/invalid/expired token"
+          },
+          "403": {
+            "description": "Permission, scope or origin denied"
+          },
+          "404": {
+            "description": "Resource not found"
+          },
+          "409": {
+            "description": "Duplicate, protected state or concurrent update"
+          },
+          "429": {
+            "description": "Authentication rate limit"
+          },
+          "500": {
+            "description": "Safe internal error"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "priority": {
+                    "type": "string",
+                    "enum": [
+                      "Low",
+                      "Medium",
+                      "High"
+                    ]
+                  }
+                },
+                "required": [
+                  "priority"
+                ]
+              },
+              "example": {
+                "priority": "High"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/dashboard": {
+      "get": {
+        "tags": [
+          "Reports"
+        ],
+        "summary": "Scoped dashboard and personal reminders",
+        "description": "Requires an active authenticated account.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "tz",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "x-required-permissions": [
+          "authenticated"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success; see API.md response envelopes"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Missing/invalid/expired token"
+          },
+          "403": {
+            "description": "Permission, scope or origin denied"
+          },
+          "404": {
+            "description": "Resource not found"
+          },
+          "409": {
+            "description": "Duplicate, protected state or concurrent update"
+          },
+          "429": {
+            "description": "Authentication rate limit"
+          },
+          "500": {
+            "description": "Safe internal error"
+          }
+        }
+      }
+    },
+    "/analytics": {
+      "get": {
+        "tags": [
+          "Reports"
+        ],
+        "summary": "Scoped reporting",
+        "description": "Required effective permissions: projects.view, tasks.view, analytics.view. Resource routes also enforce ownership/membership or projects.view_all. Admin routes always require admin/super_admin.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "days",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "tz",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "x-required-permissions": [
+          "projects.view",
+          "tasks.view",
+          "analytics.view"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success; see API.md response envelopes"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Missing/invalid/expired token"
+          },
+          "403": {
+            "description": "Permission, scope or origin denied"
+          },
+          "404": {
+            "description": "Resource not found"
+          },
+          "409": {
+            "description": "Duplicate, protected state or concurrent update"
+          },
+          "429": {
+            "description": "Authentication rate limit"
+          },
+          "500": {
+            "description": "Safe internal error"
+          }
+        }
+      }
+    },
+    "/search": {
+      "get": {
+        "tags": [
+          "Search"
+        ],
+        "summary": "Global search; result types follow permissions",
+        "description": "Requires an active authenticated account.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "x-required-permissions": [
+          "authenticated"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success; see API.md response envelopes"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Missing/invalid/expired token"
+          },
+          "403": {
+            "description": "Permission, scope or origin denied"
+          },
+          "404": {
+            "description": "Resource not found"
+          },
+          "409": {
+            "description": "Duplicate, protected state or concurrent update"
+          },
+          "429": {
+            "description": "Authentication rate limit"
+          },
+          "500": {
+            "description": "Safe internal error"
+          }
+        }
+      }
+    },
+    "/team/projects/{id}": {
+      "get": {
+        "tags": [
+          "Team"
+        ],
+        "summary": "Scoped roster and workload",
+        "description": "Required effective permissions: projects.view, team.view. Resource routes also enforce ownership/membership or projects.view_all. Admin routes always require admin/super_admin.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        ],
+        "x-required-permissions": [
+          "projects.view",
+          "team.view"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success; see API.md response envelopes"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Missing/invalid/expired token"
+          },
+          "403": {
+            "description": "Permission, scope or origin denied"
+          },
+          "404": {
+            "description": "Resource not found"
+          },
+          "409": {
+            "description": "Duplicate, protected state or concurrent update"
+          },
+          "429": {
+            "description": "Authentication rate limit"
+          },
+          "500": {
+            "description": "Safe internal error"
+          }
+        }
+      }
+    },
+    "/team/projects/{id}/candidates": {
+      "get": {
+        "tags": [
+          "Team"
+        ],
+        "summary": "Eligible active accounts, max 50",
+        "description": "Required effective permissions: projects.view, team.view, team.manage. Resource routes also enforce ownership/membership or projects.view_all. Admin routes always require admin/super_admin.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "x-required-permissions": [
+          "projects.view",
+          "team.view",
+          "team.manage"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success; see API.md response envelopes"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Missing/invalid/expired token"
+          },
+          "403": {
+            "description": "Permission, scope or origin denied"
+          },
+          "404": {
+            "description": "Resource not found"
+          },
+          "409": {
+            "description": "Duplicate, protected state or concurrent update"
+          },
+          "429": {
+            "description": "Authentication rate limit"
+          },
+          "500": {
+            "description": "Safe internal error"
+          }
+        }
+      }
+    },
+    "/notifications": {
+      "get": {
+        "tags": [
+          "Notifications"
+        ],
+        "summary": "Own notifications",
+        "description": "Requires an active authenticated account.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "x-required-permissions": [
+          "authenticated"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success; see API.md response envelopes"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Missing/invalid/expired token"
+          },
+          "403": {
+            "description": "Permission, scope or origin denied"
+          },
+          "404": {
+            "description": "Resource not found"
+          },
+          "409": {
+            "description": "Duplicate, protected state or concurrent update"
+          },
+          "429": {
+            "description": "Authentication rate limit"
+          },
+          "500": {
+            "description": "Safe internal error"
+          }
+        }
+      }
+    },
+    "/notifications/unread-count": {
+      "get": {
+        "tags": [
+          "Notifications"
+        ],
+        "summary": "Own unread count",
+        "description": "Requires an active authenticated account.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [],
+        "x-required-permissions": [
+          "authenticated"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success; see API.md response envelopes"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Missing/invalid/expired token"
+          },
+          "403": {
+            "description": "Permission, scope or origin denied"
+          },
+          "404": {
+            "description": "Resource not found"
+          },
+          "409": {
+            "description": "Duplicate, protected state or concurrent update"
+          },
+          "429": {
+            "description": "Authentication rate limit"
+          },
+          "500": {
+            "description": "Safe internal error"
+          }
+        }
+      }
+    },
+    "/notifications/{id}/read": {
+      "patch": {
+        "tags": [
+          "Notifications"
+        ],
+        "summary": "Mark owned notification read",
+        "description": "Requires an active authenticated account.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        ],
+        "x-required-permissions": [
+          "authenticated"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success; see API.md response envelopes"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Missing/invalid/expired token"
+          },
+          "403": {
+            "description": "Permission, scope or origin denied"
+          },
+          "404": {
+            "description": "Resource not found"
+          },
+          "409": {
+            "description": "Duplicate, protected state or concurrent update"
+          },
+          "429": {
+            "description": "Authentication rate limit"
+          },
+          "500": {
+            "description": "Safe internal error"
+          }
+        }
+      }
+    },
+    "/notifications/read-all": {
+      "patch": {
+        "tags": [
+          "Notifications"
+        ],
+        "summary": "Mark all own notifications read",
+        "description": "Requires an active authenticated account.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [],
+        "x-required-permissions": [
+          "authenticated"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success; see API.md response envelopes"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Missing/invalid/expired token"
+          },
+          "403": {
+            "description": "Permission, scope or origin denied"
+          },
+          "404": {
+            "description": "Resource not found"
+          },
+          "409": {
+            "description": "Duplicate, protected state or concurrent update"
+          },
+          "429": {
+            "description": "Authentication rate limit"
+          },
+          "500": {
+            "description": "Safe internal error"
+          }
+        }
+      }
+    },
+    "/notifications/preferences": {
+      "get": {
+        "tags": [
+          "Notifications"
+        ],
+        "summary": "Get own preferences",
+        "description": "Requires an active authenticated account.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [],
+        "x-required-permissions": [
+          "authenticated"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success; see API.md response envelopes"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Missing/invalid/expired token"
+          },
+          "403": {
+            "description": "Permission, scope or origin denied"
+          },
+          "404": {
+            "description": "Resource not found"
+          },
+          "409": {
+            "description": "Duplicate, protected state or concurrent update"
+          },
+          "429": {
+            "description": "Authentication rate limit"
+          },
+          "500": {
+            "description": "Safe internal error"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Notifications"
+        ],
+        "summary": "Update boolean preferences",
+        "description": "Requires an active authenticated account.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [],
+        "x-required-permissions": [
+          "authenticated"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success; see API.md response envelopes"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Missing/invalid/expired token"
+          },
+          "403": {
+            "description": "Permission, scope or origin denied"
+          },
+          "404": {
+            "description": "Resource not found"
+          },
+          "409": {
+            "description": "Duplicate, protected state or concurrent update"
+          },
+          "429": {
+            "description": "Authentication rate limit"
+          },
+          "500": {
+            "description": "Safe internal error"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "email_task_assigned": {
+                    "type": "boolean"
+                  },
+                  "email_due_tomorrow": {
+                    "type": "boolean"
+                  },
+                  "email_overdue": {
+                    "type": "boolean"
+                  },
+                  "web_task_assigned": {
+                    "type": "boolean"
+                  },
+                  "web_due_tomorrow": {
+                    "type": "boolean"
+                  },
+                  "web_overdue": {
+                    "type": "boolean"
+                  },
+                  "browser_task_assigned": {
+                    "type": "boolean"
+                  },
+                  "browser_due_tomorrow": {
+                    "type": "boolean"
+                  }
+                }
+              },
+              "example": {
+                "email_task_assigned": true,
+                "email_due_tomorrow": true,
+                "email_overdue": true,
+                "web_task_assigned": true,
+                "web_due_tomorrow": true,
+                "web_overdue": true,
+                "browser_task_assigned": false,
+                "browser_due_tomorrow": false
+              }
+            }
+          }
+        }
+      }
+    },
+    "/reminders": {
+      "get": {
+        "tags": [
+          "Calendar"
+        ],
+        "summary": "Own personal reminders",
+        "description": "Requires an active authenticated account.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "task_id",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "x-required-permissions": [
+          "authenticated"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success; see API.md response envelopes"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Missing/invalid/expired token"
+          },
+          "403": {
+            "description": "Permission, scope or origin denied"
+          },
+          "404": {
+            "description": "Resource not found"
+          },
+          "409": {
+            "description": "Duplicate, protected state or concurrent update"
+          },
+          "429": {
+            "description": "Authentication rate limit"
+          },
+          "500": {
+            "description": "Safe internal error"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Calendar"
+        ],
+        "summary": "Create future personal reminder",
+        "description": "Requires an active authenticated account.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [],
+        "x-required-permissions": [
+          "authenticated"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success; see API.md response envelopes"
+          },
+          "201": {
+            "description": "Created"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Missing/invalid/expired token"
+          },
+          "403": {
+            "description": "Permission, scope or origin denied"
+          },
+          "404": {
+            "description": "Resource not found"
+          },
+          "409": {
+            "description": "Duplicate, protected state or concurrent update"
+          },
+          "429": {
+            "description": "Authentication rate limit"
+          },
+          "500": {
+            "description": "Safe internal error"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "title": {
+                    "type": "string",
+                    "nullable": false
+                  },
+                  "notes": {
+                    "type": "string",
+                    "nullable": false
+                  },
+                  "remind_at": {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  "task_id": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "nullable": true
+                  }
+                },
+                "required": [
+                  "title",
+                  "remind_at"
+                ]
+              },
+              "example": {
+                "title": "Review release",
+                "notes": "Personal",
+                "remind_at": "2030-01-01T09:00:00Z",
+                "task_id": null
+              }
+            }
+          }
+        }
+      }
+    },
+    "/reminders/{id}": {
+      "put": {
+        "tags": [
+          "Calendar"
+        ],
+        "summary": "Edit/reschedule or dismiss reminder",
+        "description": "Requires an active authenticated account.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        ],
+        "x-required-permissions": [
+          "authenticated"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success; see API.md response envelopes"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Missing/invalid/expired token"
+          },
+          "403": {
+            "description": "Permission, scope or origin denied"
+          },
+          "404": {
+            "description": "Resource not found"
+          },
+          "409": {
+            "description": "Duplicate, protected state or concurrent update"
+          },
+          "429": {
+            "description": "Authentication rate limit"
+          },
+          "500": {
+            "description": "Safe internal error"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "title": {
+                    "type": "string",
+                    "nullable": false
+                  },
+                  "notes": {
+                    "type": "string",
+                    "nullable": false
+                  },
+                  "remind_at": {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  "task_id": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "nullable": true
+                  },
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "scheduled",
+                      "dismissed"
+                    ]
+                  }
+                },
+                "anyOf": [
+                  {
+                    "required": [
+                      "title",
+                      "remind_at"
+                    ]
+                  },
+                  {
+                    "required": [
+                      "status"
+                    ],
+                    "properties": {
+                      "status": {
+                        "enum": [
+                          "dismissed"
+                        ]
+                      }
+                    }
+                  }
+                ]
+              },
+              "example": {
+                "status": "dismissed"
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Calendar"
+        ],
+        "summary": "Delete owned reminder",
+        "description": "Requires an active authenticated account.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        ],
+        "x-required-permissions": [
+          "authenticated"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success; see API.md response envelopes"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Missing/invalid/expired token"
+          },
+          "403": {
+            "description": "Permission, scope or origin denied"
+          },
+          "404": {
+            "description": "Resource not found"
+          },
+          "409": {
+            "description": "Duplicate, protected state or concurrent update"
+          },
+          "429": {
+            "description": "Authentication rate limit"
+          },
+          "500": {
+            "description": "Safe internal error"
+          }
+        }
+      }
+    },
+    "/calendar/events": {
+      "get": {
+        "tags": [
+          "Calendar"
+        ],
+        "summary": "Own events",
+        "description": "Requires an active authenticated account.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [],
+        "x-required-permissions": [
+          "authenticated"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success; see API.md response envelopes"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Missing/invalid/expired token"
+          },
+          "403": {
+            "description": "Permission, scope or origin denied"
+          },
+          "404": {
+            "description": "Resource not found"
+          },
+          "409": {
+            "description": "Duplicate, protected state or concurrent update"
+          },
+          "429": {
+            "description": "Authentication rate limit"
+          },
+          "500": {
+            "description": "Safe internal error"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Calendar"
+        ],
+        "summary": "Create personal event",
+        "description": "Requires an active authenticated account.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [],
+        "x-required-permissions": [
+          "authenticated"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success; see API.md response envelopes"
+          },
+          "201": {
+            "description": "Created"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Missing/invalid/expired token"
+          },
+          "403": {
+            "description": "Permission, scope or origin denied"
+          },
+          "404": {
+            "description": "Resource not found"
+          },
+          "409": {
+            "description": "Duplicate, protected state or concurrent update"
+          },
+          "429": {
+            "description": "Authentication rate limit"
+          },
+          "500": {
+            "description": "Safe internal error"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "title": {
+                    "type": "string",
+                    "nullable": false
+                  },
+                  "event_date": {
+                    "type": "string",
+                    "format": "date",
+                    "nullable": false
+                  },
+                  "start_time": {
+                    "type": "string",
+                    "nullable": false
+                  },
+                  "end_time": {
+                    "type": "string",
+                    "nullable": false
+                  },
+                  "notes": {
+                    "type": "string",
+                    "nullable": false
+                  }
+                },
+                "required": [
+                  "title",
+                  "event_date"
+                ]
+              },
+              "example": {
+                "title": "Release review",
+                "event_date": "2028-12-01",
+                "start_time": "09:00",
+                "end_time": "10:00",
+                "notes": "Personal calendar entry"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/calendar/events/{id}": {
+      "put": {
+        "tags": [
+          "Calendar"
+        ],
+        "summary": "Edit personal event",
+        "description": "Requires an active authenticated account.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        ],
+        "x-required-permissions": [
+          "authenticated"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success; see API.md response envelopes"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Missing/invalid/expired token"
+          },
+          "403": {
+            "description": "Permission, scope or origin denied"
+          },
+          "404": {
+            "description": "Resource not found"
+          },
+          "409": {
+            "description": "Duplicate, protected state or concurrent update"
+          },
+          "429": {
+            "description": "Authentication rate limit"
+          },
+          "500": {
+            "description": "Safe internal error"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "title": {
+                    "type": "string",
+                    "nullable": false
+                  },
+                  "event_date": {
+                    "type": "string",
+                    "format": "date",
+                    "nullable": false
+                  },
+                  "start_time": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "end_time": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "notes": {
+                    "type": "string",
+                    "nullable": false
+                  }
+                },
+                "required": [
+                  "title",
+                  "event_date"
+                ]
+              },
+              "example": {
+                "title": "Release review",
+                "event_date": "2028-12-01",
+                "start_time": null,
+                "end_time": null,
+                "notes": "All day"
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Calendar"
+        ],
+        "summary": "Delete owned event",
+        "description": "Requires an active authenticated account.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        ],
+        "x-required-permissions": [
+          "authenticated"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success; see API.md response envelopes"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Missing/invalid/expired token"
+          },
+          "403": {
+            "description": "Permission, scope or origin denied"
+          },
+          "404": {
+            "description": "Resource not found"
+          },
+          "409": {
+            "description": "Duplicate, protected state or concurrent update"
+          },
+          "429": {
+            "description": "Authentication rate limit"
+          },
+          "500": {
+            "description": "Safe internal error"
+          }
+        }
+      }
+    },
+    "/calendar/colours": {
+      "get": {
+        "tags": [
+          "Calendar"
+        ],
+        "summary": "Own colour choices",
+        "description": "Requires an active authenticated account.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [],
+        "x-required-permissions": [
+          "authenticated"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success; see API.md response envelopes"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Missing/invalid/expired token"
+          },
+          "403": {
+            "description": "Permission, scope or origin denied"
+          },
+          "404": {
+            "description": "Resource not found"
+          },
+          "409": {
+            "description": "Duplicate, protected state or concurrent update"
+          },
+          "429": {
+            "description": "Authentication rate limit"
+          },
+          "500": {
+            "description": "Safe internal error"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Calendar"
+        ],
+        "summary": "Save category/item colour",
+        "description": "Requires an active authenticated account.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [],
+        "x-required-permissions": [
+          "authenticated"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success; see API.md response envelopes"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Missing/invalid/expired token"
+          },
+          "403": {
+            "description": "Permission, scope or origin denied"
+          },
+          "404": {
+            "description": "Resource not found"
+          },
+          "409": {
+            "description": "Duplicate, protected state or concurrent update"
+          },
+          "429": {
+            "description": "Authentication rate limit"
+          },
+          "500": {
+            "description": "Safe internal error"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "key": {
+                    "type": "string",
+                    "nullable": false
+                  },
+                  "colour": {
+                    "type": "string",
+                    "pattern": "^#[0-9a-fA-F]{6}$"
+                  }
+                },
+                "required": [
+                  "key",
+                  "colour"
+                ]
+              },
+              "example": {
+                "key": "task",
+                "colour": "#2563eb"
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Calendar"
+        ],
+        "summary": "Reset own colours",
+        "description": "Requires an active authenticated account.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [],
+        "x-required-permissions": [
+          "authenticated"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success; see API.md response envelopes"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Missing/invalid/expired token"
+          },
+          "403": {
+            "description": "Permission, scope or origin denied"
+          },
+          "404": {
+            "description": "Resource not found"
+          },
+          "409": {
+            "description": "Duplicate, protected state or concurrent update"
+          },
+          "429": {
+            "description": "Authentication rate limit"
+          },
+          "500": {
+            "description": "Safe internal error"
+          }
+        }
+      }
+    },
+    "/admin/users": {
+      "get": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Admin-only account directory",
+        "description": "Required effective permissions: users.view. Resource routes also enforce ownership/membership or projects.view_all. Admin routes always require admin/super_admin.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "search",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "role",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "is_active",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "x-required-permissions": [
+          "users.view"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success; see API.md response envelopes"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Missing/invalid/expired token"
+          },
+          "403": {
+            "description": "Permission, scope or origin denied"
+          },
+          "404": {
+            "description": "Resource not found"
+          },
+          "409": {
+            "description": "Duplicate, protected state or concurrent update"
+          },
+          "429": {
+            "description": "Authentication rate limit"
+          },
+          "500": {
+            "description": "Safe internal error"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Create account; privileged roles need users.roles",
+        "description": "Required effective permissions: users.create. Resource routes also enforce ownership/membership or projects.view_all. Admin routes always require admin/super_admin.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [],
+        "x-required-permissions": [
+          "users.create"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success; see API.md response envelopes"
+          },
+          "201": {
+            "description": "Created"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Missing/invalid/expired token"
+          },
+          "403": {
+            "description": "Permission, scope or origin denied"
+          },
+          "404": {
+            "description": "Resource not found"
+          },
+          "409": {
+            "description": "Duplicate, protected state or concurrent update"
+          },
+          "429": {
+            "description": "Authentication rate limit"
+          },
+          "500": {
+            "description": "Safe internal error"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "full_name": {
+                    "type": "string",
+                    "nullable": false
+                  },
+                  "email": {
+                    "type": "string",
+                    "format": "email"
+                  },
+                  "password": {
+                    "type": "string",
+                    "format": "password",
+                    "minLength": 8,
+                    "maxLength": 72,
+                    "writeOnly": true,
+                    "description": "At most 72 UTF-8 bytes; new passwords need a letter and number."
+                  },
+                  "role": {
+                    "type": "string",
+                    "enum": [
+                      "super_admin",
+                      "admin",
+                      "portfolio_manager",
+                      "project_manager",
+                      "project_coordinator",
+                      "team_lead",
+                      "member",
+                      "viewer"
+                    ]
+                  },
+                  "department": {
+                    "type": "string",
+                    "nullable": false
+                  },
+                  "job_title": {
+                    "type": "string",
+                    "nullable": false
+                  }
+                },
+                "required": [
+                  "full_name",
+                  "email",
+                  "password"
+                ]
+              },
+              "example": {
+                "full_name": "New Member",
+                "email": "{{newEmail}}",
+                "password": "{{password}}",
+                "role": "member",
+                "department": "Delivery",
+                "job_title": "Contributor"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/users/{id}": {
+      "get": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Account details",
+        "description": "Required effective permissions: users.view. Resource routes also enforce ownership/membership or projects.view_all. Admin routes always require admin/super_admin.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        ],
+        "x-required-permissions": [
+          "users.view"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success; see API.md response envelopes"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Missing/invalid/expired token"
+          },
+          "403": {
+            "description": "Permission, scope or origin denied"
+          },
+          "404": {
+            "description": "Resource not found"
+          },
+          "409": {
+            "description": "Duplicate, protected state or concurrent update"
+          },
+          "429": {
+            "description": "Authentication rate limit"
+          },
+          "500": {
+            "description": "Safe internal error"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Edit protected-level account profile",
+        "description": "Required effective permissions: users.edit. Resource routes also enforce ownership/membership or projects.view_all. Admin routes always require admin/super_admin.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        ],
+        "x-required-permissions": [
+          "users.edit"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success; see API.md response envelopes"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Missing/invalid/expired token"
+          },
+          "403": {
+            "description": "Permission, scope or origin denied"
+          },
+          "404": {
+            "description": "Resource not found"
+          },
+          "409": {
+            "description": "Duplicate, protected state or concurrent update"
+          },
+          "429": {
+            "description": "Authentication rate limit"
+          },
+          "500": {
+            "description": "Safe internal error"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "full_name": {
+                    "type": "string",
+                    "nullable": false
+                  },
+                  "email": {
+                    "type": "string",
+                    "format": "email"
+                  },
+                  "department": {
+                    "type": "string",
+                    "nullable": false
+                  },
+                  "job_title": {
+                    "type": "string",
+                    "nullable": false
+                  }
+                },
+                "required": [
+                  "full_name",
+                  "email"
+                ]
+              },
+              "example": {
+                "full_name": "Updated Member",
+                "email": "{{newEmail}}",
+                "department": "Delivery",
+                "job_title": "Contributor"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/users/{id}/role": {
+      "patch": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Change role; protected admin boundaries",
+        "description": "Required effective permissions: users.roles. Resource routes also enforce ownership/membership or projects.view_all. Admin routes always require admin/super_admin.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        ],
+        "x-required-permissions": [
+          "users.roles"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success; see API.md response envelopes"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Missing/invalid/expired token"
+          },
+          "403": {
+            "description": "Permission, scope or origin denied"
+          },
+          "404": {
+            "description": "Resource not found"
+          },
+          "409": {
+            "description": "Duplicate, protected state or concurrent update"
+          },
+          "429": {
+            "description": "Authentication rate limit"
+          },
+          "500": {
+            "description": "Safe internal error"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "role": {
+                    "type": "string",
+                    "enum": [
+                      "super_admin",
+                      "admin",
+                      "portfolio_manager",
+                      "project_manager",
+                      "project_coordinator",
+                      "team_lead",
+                      "member",
+                      "viewer"
+                    ]
+                  }
+                },
+                "required": [
+                  "role"
+                ]
+              },
+              "example": {
+                "role": "member"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/users/{id}/status": {
+      "patch": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Activate/deactivate; preserve active Super Admin",
+        "description": "Required effective permissions: users.status. Resource routes also enforce ownership/membership or projects.view_all. Admin routes always require admin/super_admin.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        ],
+        "x-required-permissions": [
+          "users.status"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success; see API.md response envelopes"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Missing/invalid/expired token"
+          },
+          "403": {
+            "description": "Permission, scope or origin denied"
+          },
+          "404": {
+            "description": "Resource not found"
+          },
+          "409": {
+            "description": "Duplicate, protected state or concurrent update"
+          },
+          "429": {
+            "description": "Authentication rate limit"
+          },
+          "500": {
+            "description": "Safe internal error"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "is_active": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "is_active"
+                ]
+              },
+              "example": {
+                "is_active": false
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/users/{id}/permissions": {
+      "put": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Set boolean overrides or null",
+        "description": "Required effective permissions: users.roles. Resource routes also enforce ownership/membership or projects.view_all. Admin routes always require admin/super_admin.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        ],
+        "x-required-permissions": [
+          "users.roles"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success; see API.md response envelopes"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Missing/invalid/expired token"
+          },
+          "403": {
+            "description": "Permission, scope or origin denied"
+          },
+          "404": {
+            "description": "Resource not found"
+          },
+          "409": {
+            "description": "Duplicate, protected state or concurrent update"
+          },
+          "429": {
+            "description": "Authentication rate limit"
+          },
+          "500": {
+            "description": "Safe internal error"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "overrides": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "type": "boolean"
+                    },
+                    "nullable": true
+                  }
+                },
+                "required": [
+                  "overrides"
+                ]
+              },
+              "example": {
+                "overrides": {
+                  "tasks.create": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/roles": {
+      "get": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Policies and permission catalog",
+        "description": "Required effective permissions: users.view. Resource routes also enforce ownership/membership or projects.view_all. Admin routes always require admin/super_admin.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [],
+        "x-required-permissions": [
+          "users.view"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success; see API.md response envelopes"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Missing/invalid/expired token"
+          },
+          "403": {
+            "description": "Permission, scope or origin denied"
+          },
+          "404": {
+            "description": "Resource not found"
+          },
+          "409": {
+            "description": "Duplicate, protected state or concurrent update"
+          },
+          "429": {
+            "description": "Authentication rate limit"
+          },
+          "500": {
+            "description": "Safe internal error"
+          }
+        }
+      }
+    },
+    "/admin/roles/{role}": {
+      "put": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Update policy with optimistic version",
+        "description": "Required effective permissions: roles.manage. Resource routes also enforce ownership/membership or projects.view_all. Admin routes always require admin/super_admin.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "role",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "super_admin",
+                "admin",
+                "portfolio_manager",
+                "project_manager",
+                "project_coordinator",
+                "team_lead",
+                "member",
+                "viewer"
+              ]
+            }
+          }
+        ],
+        "x-required-permissions": [
+          "roles.manage"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success; see API.md response envelopes"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Missing/invalid/expired token"
+          },
+          "403": {
+            "description": "Permission, scope or origin denied"
+          },
+          "404": {
+            "description": "Resource not found"
+          },
+          "409": {
+            "description": "Duplicate, protected state or concurrent update"
+          },
+          "429": {
+            "description": "Authentication rate limit"
+          },
+          "500": {
+            "description": "Safe internal error"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "permissions": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "enum": [
+                        "projects.view",
+                        "projects.view_all",
+                        "projects.create",
+                        "projects.edit",
+                        "projects.delete",
+                        "tasks.view",
+                        "tasks.create",
+                        "tasks.edit",
+                        "tasks.assign",
+                        "tasks.delete",
+                        "tasks.status",
+                        "tasks.status_assigned",
+                        "team.view",
+                        "team.manage",
+                        "analytics.view",
+                        "users.view",
+                        "users.create",
+                        "users.edit",
+                        "users.roles",
+                        "users.status",
+                        "roles.manage",
+                        "audit.view"
+                      ]
+                    }
+                  },
+                  "version": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "nullable": false
+                  }
+                },
+                "required": [
+                  "permissions",
+                  "version"
+                ]
+              },
+              "example": {
+                "permissions": [
+                  "projects.view",
+                  "tasks.view"
+                ],
+                "version": 1
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/stats": {
+      "get": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "User/role statistics",
+        "description": "Required effective permissions: users.view. Resource routes also enforce ownership/membership or projects.view_all. Admin routes always require admin/super_admin.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [],
+        "x-required-permissions": [
+          "users.view"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success; see API.md response envelopes"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Missing/invalid/expired token"
+          },
+          "403": {
+            "description": "Permission, scope or origin denied"
+          },
+          "404": {
+            "description": "Resource not found"
+          },
+          "409": {
+            "description": "Duplicate, protected state or concurrent update"
+          },
+          "429": {
+            "description": "Authentication rate limit"
+          },
+          "500": {
+            "description": "Safe internal error"
+          }
+        }
+      }
+    },
+    "/admin/audit-logs": {
+      "get": {
+        "tags": [
+          "Audit"
+        ],
+        "summary": "Admin audit history",
+        "description": "Required effective permissions: audit.view. Resource routes also enforce ownership/membership or projects.view_all. Admin routes always require admin/super_admin.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "search",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "action",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "resource_type",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "user_id",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "x-required-permissions": [
+          "audit.view"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success; see API.md response envelopes"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "401": {
+            "description": "Missing/invalid/expired token"
+          },
+          "403": {
+            "description": "Permission, scope or origin denied"
+          },
+          "404": {
+            "description": "Resource not found"
+          },
+          "409": {
+            "description": "Duplicate, protected state or concurrent update"
+          },
+          "429": {
+            "description": "Authentication rate limit"
+          },
+          "500": {
+            "description": "Safe internal error"
+          }
+        }
+      }
+    }
+  }
+}

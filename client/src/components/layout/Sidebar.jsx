@@ -49,7 +49,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
             <BrandMark size={36}/>
             <span className="logo-text">ProjectMaster</span>
           </div>
-          <button className="sidebar-close-btn" onClick={toggleSidebar}>
+          <button className="sidebar-close-btn" aria-label="Close navigation" onClick={toggleSidebar}>
             <X size={20} />
           </button>
         </div>

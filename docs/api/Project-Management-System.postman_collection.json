@@ -1,0 +1,1960 @@
+{
+  "info": {
+    "name": "Project Management System",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5000/api"
+    },
+    {
+      "key": "token",
+      "value": ""
+    },
+    {
+      "key": "email",
+      "value": ""
+    },
+    {
+      "key": "newEmail",
+      "value": ""
+    },
+    {
+      "key": "password",
+      "value": ""
+    },
+    {
+      "key": "projectId",
+      "value": "1"
+    },
+    {
+      "key": "taskId",
+      "value": "1"
+    },
+    {
+      "key": "userId",
+      "value": "1"
+    },
+    {
+      "key": "notificationId",
+      "value": "1"
+    },
+    {
+      "key": "reminderId",
+      "value": "1"
+    },
+    {
+      "key": "eventId",
+      "value": "1"
+    },
+    {
+      "key": "role",
+      "value": "member"
+    }
+  ],
+  "item": [
+    {
+      "name": "Operations",
+      "item": [
+        {
+          "name": "Process liveness",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": "{{baseUrl}}/health",
+            "description": "Public endpoint."
+          }
+        },
+        {
+          "name": "Database readiness",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": "{{baseUrl}}/ready",
+            "description": "Public endpoint."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register a Team Member",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": "{{baseUrl}}/auth/register",
+            "description": "Public endpoint.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"full_name\": \"Test Person\",\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Login; save returned token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": "{{baseUrl}}/auth/login",
+            "description": "Public endpoint.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if(pm.response.code===200)pm.collectionVariables.set('token',pm.response.json().token);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Acknowledge client logout",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/auth/logout",
+            "description": "Requires an active authenticated account."
+          }
+        },
+        {
+          "name": "Current user and effective permissions",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/auth/me",
+            "description": "Requires an active authenticated account."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Projects",
+      "item": [
+        {
+          "name": "Scoped project list",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/projects",
+              "query": [
+                {
+                  "key": "search",
+                  "value": "",
+                  "disabled": true,
+                  "description": "Optional; see API.md for allowed values."
+                },
+                {
+                  "key": "status",
+                  "value": "",
+                  "disabled": true,
+                  "description": "Optional; see API.md for allowed values."
+                },
+                {
+                  "key": "sortBy",
+                  "value": "",
+                  "disabled": true,
+                  "description": "Optional; see API.md for allowed values."
+                },
+                {
+                  "key": "sortOrder",
+                  "value": "",
+                  "disabled": true,
+                  "description": "Optional; see API.md for allowed values."
+                }
+              ]
+            },
+            "description": "Required effective permissions: projects.view. Resource routes also enforce ownership/membership or projects.view_all. Admin routes always require admin/super_admin."
+          }
+        },
+        {
+          "name": "Create owned project",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/projects",
+            "description": "Required effective permissions: projects.view, projects.create. Resource routes also enforce ownership/membership or projects.view_all. Admin routes always require admin/super_admin.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Release project\",\n  \"description\": \"Quality review\",\n  \"status\": \"Not Started\",\n  \"start_date\": \"2028-01-01\",\n  \"end_date\": \"2028-12-31\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if(pm.response.code===201)pm.collectionVariables.set('projectId',pm.response.json().data.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Project details and members",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/projects/{{projectId}}",
+            "description": "Required effective permissions: projects.view. Resource routes also enforce ownership/membership or projects.view_all. Admin routes always require admin/super_admin."
+          }
+        },
+        {
+          "name": "Edit scoped project",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/projects/{{projectId}}",
+            "description": "Required effective permissions: projects.view, projects.edit. Resource routes also enforce ownership/membership or projects.view_all. Admin routes always require admin/super_admin.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Updated release project\",\n  \"status\": \"In Progress\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Delete project and its tasks",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/projects/{{projectId}}",
+            "description": "Required effective permissions: projects.view, projects.delete. Resource routes also enforce ownership/membership or projects.view_all. Admin routes always require admin/super_admin."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Team",
+      "item": [
+        {
+          "name": "Project members",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/projects/{{projectId}}/members",
+            "description": "Required effective permissions: projects.view. Resource routes also enforce ownership/membership or projects.view_all. Admin routes always require admin/super_admin."
+          }
+        },
+        {
+          "name": "Add active member",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/projects/{{projectId}}/members",
+            "description": "Required effective permissions: projects.view, team.manage. Resource routes also enforce ownership/membership or projects.view_all. Admin routes always require admin/super_admin.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"user_id\": \"{{userId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Remove member without open tasks",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/projects/{{projectId}}/members/{{userId}}",
+            "description": "Required effective permissions: projects.view, team.manage. Resource routes also enforce ownership/membership or projects.view_all. Admin routes always require admin/super_admin."
+          }
+        },
+        {
+          "name": "Scoped roster and workload",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/team/projects/{{projectId}}",
+            "description": "Required effective permissions: projects.view, team.view. Resource routes also enforce ownership/membership or projects.view_all. Admin routes always require admin/super_admin."
+          }
+        },
+        {
+          "name": "Eligible active accounts, max 50",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/team/projects/{{projectId}}/candidates",
+              "query": [
+                {
+                  "key": "search",
+                  "value": "",
+                  "disabled": true,
+                  "description": "Optional; see API.md for allowed values."
+                }
+              ]
+            },
+            "description": "Required effective permissions: projects.view, team.view, team.manage. Resource routes also enforce ownership/membership or projects.view_all. Admin routes always require admin/super_admin."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Tasks",
+      "item": [
+        {
+          "name": "Scoped project tasks",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/projects/{{projectId}}/tasks",
+              "query": [
+                {
+                  "key": "search",
+                  "value": "",
+                  "disabled": true,
+                  "description": "Optional; see API.md for allowed values."
+                },
+                {
+                  "key": "status",
+                  "value": "",
+                  "disabled": true,
+                  "description": "Optional; see API.md for allowed values."
+                },
+                {
+                  "key": "priority",
+                  "value": "",
+                  "disabled": true,
+                  "description": "Optional; see API.md for allowed values."
+                },
+                {
+                  "key": "sortBy",
+                  "value": "",
+                  "disabled": true,
+                  "description": "Optional; see API.md for allowed values."
+                },
+                {
+                  "key": "order",
+                  "value": "",
+                  "disabled": true,
+                  "description": "Optional; see API.md for allowed values."
+                }
+              ]
+            },
+            "description": "Required effective permissions: projects.view, tasks.view. Resource routes also enforce ownership/membership or projects.view_all. Admin routes always require admin/super_admin."
+          }
+        },
+        {
+          "name": "Scoped tasks",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/tasks",
+              "query": [
+                {
+                  "key": "project_id",
+                  "value": "",
+                  "disabled": true,
+                  "description": "Optional; see API.md for allowed values."
+                },
+                {
+                  "key": "assigned_to",
+                  "value": "",
+                  "disabled": true,
+                  "description": "Optional; see API.md for allowed values."
+                },
+                {
+                  "key": "search",
+                  "value": "",
+                  "disabled": true,
+                  "description": "Optional; see API.md for allowed values."
+                },
+                {
+                  "key": "status",
+                  "value": "",
+                  "disabled": true,
+                  "description": "Optional; see API.md for allowed values."
+                },
+                {
+                  "key": "priority",
+                  "value": "",
+                  "disabled": true,
+                  "description": "Optional; see API.md for allowed values."
+                },
+                {
+                  "key": "sortBy",
+                  "value": "",
+                  "disabled": true,
+                  "description": "Optional; see API.md for allowed values."
+                },
+                {
+                  "key": "order",
+                  "value": "",
+                  "disabled": true,
+                  "description": "Optional; see API.md for allowed values."
+                }
+              ]
+            },
+            "description": "Required effective permissions: tasks.view. Resource routes also enforce ownership/membership or projects.view_all. Admin routes always require admin/super_admin."
+          }
+        },
+        {
+          "name": "Create task; assignment needs tasks.assign",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/tasks",
+            "description": "Required effective permissions: projects.view, tasks.view, tasks.create. Resource routes also enforce ownership/membership or projects.view_all. Admin routes always require admin/super_admin.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"project_id\": \"{{projectId}}\",\n  \"name\": \"Review quality checklist\",\n  \"description\": \"Check tests\",\n  \"status\": \"Pending\",\n  \"priority\": \"High\",\n  \"due_date\": \"2028-12-01\",\n  \"assigned_to\": null\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if(pm.response.code===201)pm.collectionVariables.set('taskId',pm.response.json().data.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Task details",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/tasks/{{taskId}}",
+            "description": "Required effective permissions: projects.view, tasks.view. Resource routes also enforce ownership/membership or projects.view_all. Admin routes always require admin/super_admin."
+          }
+        },
+        {
+          "name": "Edit task; status/assignee also require their permissions",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/tasks/{{taskId}}",
+            "description": "Required effective permissions: projects.view, tasks.view, tasks.edit. Resource routes also enforce ownership/membership or projects.view_all. Admin routes always require admin/super_admin.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Updated quality checklist\",\n  \"priority\": \"Medium\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Assign, reassign or unassign",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/tasks/{{taskId}}/assign",
+            "description": "Required effective permissions: projects.view, tasks.view, tasks.assign. Resource routes also enforce ownership/membership or projects.view_all. Admin routes always require admin/super_admin.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"assigned_to\": \"{{userId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Change status; tasks.status_assigned also permits own assignments",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/tasks/{{taskId}}/status",
+            "description": "Required effective permissions: projects.view, tasks.view. Resource routes also enforce ownership/membership or projects.view_all. Admin routes always require admin/super_admin.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"Completed\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Change priority",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/tasks/{{taskId}}/priority",
+            "description": "Required effective permissions: projects.view, tasks.view, tasks.edit. Resource routes also enforce ownership/membership or projects.view_all. Admin routes always require admin/super_admin.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"priority\": \"High\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Delete task",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/tasks/{{taskId}}",
+            "description": "Required effective permissions: projects.view, tasks.view, tasks.delete. Resource routes also enforce ownership/membership or projects.view_all. Admin routes always require admin/super_admin."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Reports",
+      "item": [
+        {
+          "name": "Scoped dashboard and personal reminders",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/dashboard",
+              "query": [
+                {
+                  "key": "tz",
+                  "value": "",
+                  "disabled": true,
+                  "description": "Optional; see API.md for allowed values."
+                }
+              ]
+            },
+            "description": "Requires an active authenticated account."
+          }
+        },
+        {
+          "name": "Scoped reporting",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/analytics",
+              "query": [
+                {
+                  "key": "project_id",
+                  "value": "",
+                  "disabled": true,
+                  "description": "Optional; see API.md for allowed values."
+                },
+                {
+                  "key": "days",
+                  "value": "",
+                  "disabled": true,
+                  "description": "Optional; see API.md for allowed values."
+                },
+                {
+                  "key": "tz",
+                  "value": "",
+                  "disabled": true,
+                  "description": "Optional; see API.md for allowed values."
+                }
+              ]
+            },
+            "description": "Required effective permissions: projects.view, tasks.view, analytics.view. Resource routes also enforce ownership/membership or projects.view_all. Admin routes always require admin/super_admin."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Search",
+      "item": [
+        {
+          "name": "Global search; result types follow permissions",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/search",
+              "query": [
+                {
+                  "key": "q",
+                  "value": "",
+                  "disabled": true,
+                  "description": "Optional; see API.md for allowed values."
+                }
+              ]
+            },
+            "description": "Requires an active authenticated account."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Notifications",
+      "item": [
+        {
+          "name": "Own notifications",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/notifications",
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "",
+                  "disabled": true,
+                  "description": "Optional; see API.md for allowed values."
+                },
+                {
+                  "key": "offset",
+                  "value": "",
+                  "disabled": true,
+                  "description": "Optional; see API.md for allowed values."
+                }
+              ]
+            },
+            "description": "Requires an active authenticated account."
+          }
+        },
+        {
+          "name": "Own unread count",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/notifications/unread-count",
+            "description": "Requires an active authenticated account."
+          }
+        },
+        {
+          "name": "Mark owned notification read",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/notifications/{{notificationId}}/read",
+            "description": "Requires an active authenticated account."
+          }
+        },
+        {
+          "name": "Mark all own notifications read",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/notifications/read-all",
+            "description": "Requires an active authenticated account."
+          }
+        },
+        {
+          "name": "Get own preferences",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/notifications/preferences",
+            "description": "Requires an active authenticated account."
+          }
+        },
+        {
+          "name": "Update boolean preferences",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/notifications/preferences",
+            "description": "Requires an active authenticated account.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email_task_assigned\": true,\n  \"email_due_tomorrow\": true,\n  \"email_overdue\": true,\n  \"web_task_assigned\": true,\n  \"web_due_tomorrow\": true,\n  \"web_overdue\": true,\n  \"browser_task_assigned\": false,\n  \"browser_due_tomorrow\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Calendar",
+      "item": [
+        {
+          "name": "Own personal reminders",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/reminders",
+              "query": [
+                {
+                  "key": "task_id",
+                  "value": "",
+                  "disabled": true,
+                  "description": "Optional; see API.md for allowed values."
+                },
+                {
+                  "key": "status",
+                  "value": "",
+                  "disabled": true,
+                  "description": "Optional; see API.md for allowed values."
+                }
+              ]
+            },
+            "description": "Requires an active authenticated account."
+          }
+        },
+        {
+          "name": "Create future personal reminder",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/reminders",
+            "description": "Requires an active authenticated account.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Review release\",\n  \"notes\": \"Personal\",\n  \"remind_at\": \"2030-01-01T09:00:00Z\",\n  \"task_id\": null\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if(pm.response.code===201)pm.collectionVariables.set('reminderId',pm.response.json().data.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Edit/reschedule or dismiss reminder",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/reminders/{{reminderId}}",
+            "description": "Requires an active authenticated account.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"dismissed\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Delete owned reminder",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/reminders/{{reminderId}}",
+            "description": "Requires an active authenticated account."
+          }
+        },
+        {
+          "name": "Own events",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/calendar/events",
+            "description": "Requires an active authenticated account."
+          }
+        },
+        {
+          "name": "Create personal event",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/calendar/events",
+            "description": "Requires an active authenticated account.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Release review\",\n  \"event_date\": \"2028-12-01\",\n  \"start_time\": \"09:00\",\n  \"end_time\": \"10:00\",\n  \"notes\": \"Personal calendar entry\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if(pm.response.code===201)pm.collectionVariables.set('eventId',pm.response.json().data.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Edit personal event",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/calendar/events/{{eventId}}",
+            "description": "Requires an active authenticated account.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Release review\",\n  \"event_date\": \"2028-12-01\",\n  \"start_time\": null,\n  \"end_time\": null,\n  \"notes\": \"All day\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Delete owned event",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/calendar/events/{{eventId}}",
+            "description": "Requires an active authenticated account."
+          }
+        },
+        {
+          "name": "Own colour choices",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/calendar/colours",
+            "description": "Requires an active authenticated account."
+          }
+        },
+        {
+          "name": "Save category/item colour",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/calendar/colours",
+            "description": "Requires an active authenticated account.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"key\": \"task\",\n  \"colour\": \"#2563eb\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Reset own colours",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/calendar/colours",
+            "description": "Requires an active authenticated account."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin",
+      "item": [
+        {
+          "name": "Admin-only account directory",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/admin/users",
+              "query": [
+                {
+                  "key": "search",
+                  "value": "",
+                  "disabled": true,
+                  "description": "Optional; see API.md for allowed values."
+                },
+                {
+                  "key": "role",
+                  "value": "",
+                  "disabled": true,
+                  "description": "Optional; see API.md for allowed values."
+                },
+                {
+                  "key": "is_active",
+                  "value": "",
+                  "disabled": true,
+                  "description": "Optional; see API.md for allowed values."
+                },
+                {
+                  "key": "page",
+                  "value": "",
+                  "disabled": true,
+                  "description": "Optional; see API.md for allowed values."
+                },
+                {
+                  "key": "limit",
+                  "value": "",
+                  "disabled": true,
+                  "description": "Optional; see API.md for allowed values."
+                }
+              ]
+            },
+            "description": "Required effective permissions: users.view. Resource routes also enforce ownership/membership or projects.view_all. Admin routes always require admin/super_admin."
+          }
+        },
+        {
+          "name": "Create account; privileged roles need users.roles",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/admin/users",
+            "description": "Required effective permissions: users.create. Resource routes also enforce ownership/membership or projects.view_all. Admin routes always require admin/super_admin.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"full_name\": \"New Member\",\n  \"email\": \"{{newEmail}}\",\n  \"password\": \"{{password}}\",\n  \"role\": \"member\",\n  \"department\": \"Delivery\",\n  \"job_title\": \"Contributor\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Account details",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/admin/users/{{{userId}}}",
+            "description": "Required effective permissions: users.view. Resource routes also enforce ownership/membership or projects.view_all. Admin routes always require admin/super_admin."
+          }
+        },
+        {
+          "name": "Edit protected-level account profile",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/admin/users/{{{userId}}}",
+            "description": "Required effective permissions: users.edit. Resource routes also enforce ownership/membership or projects.view_all. Admin routes always require admin/super_admin.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"full_name\": \"Updated Member\",\n  \"email\": \"{{newEmail}}\",\n  \"department\": \"Delivery\",\n  \"job_title\": \"Contributor\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Change role; protected admin boundaries",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/admin/users/{{{userId}}}/role",
+            "description": "Required effective permissions: users.roles. Resource routes also enforce ownership/membership or projects.view_all. Admin routes always require admin/super_admin.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"role\": \"member\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Activate/deactivate; preserve active Super Admin",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/admin/users/{{{userId}}}/status",
+            "description": "Required effective permissions: users.status. Resource routes also enforce ownership/membership or projects.view_all. Admin routes always require admin/super_admin.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"is_active\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Set boolean overrides or null",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/admin/users/{{{userId}}}/permissions",
+            "description": "Required effective permissions: users.roles. Resource routes also enforce ownership/membership or projects.view_all. Admin routes always require admin/super_admin.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"overrides\": {\n    \"tasks.create\": false\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Policies and permission catalog",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/admin/roles",
+            "description": "Required effective permissions: users.view. Resource routes also enforce ownership/membership or projects.view_all. Admin routes always require admin/super_admin."
+          }
+        },
+        {
+          "name": "Update policy with optimistic version",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/admin/roles/{{role}}",
+            "description": "Required effective permissions: roles.manage. Resource routes also enforce ownership/membership or projects.view_all. Admin routes always require admin/super_admin.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"permissions\": [\n    \"projects.view\",\n    \"tasks.view\"\n  ],\n  \"version\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "User/role statistics",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/admin/stats",
+            "description": "Required effective permissions: users.view. Resource routes also enforce ownership/membership or projects.view_all. Admin routes always require admin/super_admin."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Audit",
+      "item": [
+        {
+          "name": "Admin audit history",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/admin/audit-logs",
+              "query": [
+                {
+                  "key": "search",
+                  "value": "",
+                  "disabled": true,
+                  "description": "Optional; see API.md for allowed values."
+                },
+                {
+                  "key": "action",
+                  "value": "",
+                  "disabled": true,
+                  "description": "Optional; see API.md for allowed values."
+                },
+                {
+                  "key": "resource_type",
+                  "value": "",
+                  "disabled": true,
+                  "description": "Optional; see API.md for allowed values."
+                },
+                {
+                  "key": "user_id",
+                  "value": "",
+                  "disabled": true,
+                  "description": "Optional; see API.md for allowed values."
+                },
+                {
+                  "key": "from",
+                  "value": "",
+                  "disabled": true,
+                  "description": "Optional; see API.md for allowed values."
+                },
+                {
+                  "key": "to",
+                  "value": "",
+                  "disabled": true,
+                  "description": "Optional; see API.md for allowed values."
+                },
+                {
+                  "key": "page",
+                  "value": "",
+                  "disabled": true,
+                  "description": "Optional; see API.md for allowed values."
+                },
+                {
+                  "key": "limit",
+                  "value": "",
+                  "disabled": true,
+                  "description": "Optional; see API.md for allowed values."
+                }
+              ]
+            },
+            "description": "Required effective permissions: audit.view. Resource routes also enforce ownership/membership or projects.view_all. Admin routes always require admin/super_admin."
+          }
+        }
+      ]
+    }
+  ]
+}

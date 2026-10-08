@@ -1,28 +1,22 @@
-const path = require('path');
-
-// Load environment variables before anything else
-require('dotenv').config({ path: path.resolve(__dirname, '.env') });
-require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
-
-const app = require('./app');
-const { testConnection } = require('./config/db');
-
-const { startScheduler } = require('./jobs/notificationScheduler');
-
-const PORT = process.env.PORT || 5000;
-
-const startServer = async () => {
-  // Test database connection
+const {validateEnvironment}=require('./config/env');
+const logger=require('./utils/logger');
+async function startServer(){
+  const config=validateEnvironment();
+  const {pool,testConnection}=require('./config/db');
   await testConnection();
-
-  // Start notification scheduler
-  startScheduler();
-
-  // Start HTTP server
-  app.listen(PORT, () => {
-    console.log(`[Server] Server is running on port ${PORT}`);
-    console.log(`[Server] Health check available at: http://localhost:${PORT}/api/health`);
-  });
-};
-
-startServer();
+  const server=require('./app').listen(config.port,()=>logger.info('server_started',{port:config.port,environment:process.env.NODE_ENV||'development'}));
+  await new Promise((resolve,reject)=>{server.once('listening',resolve);server.once('error',reject);});
+  const jobs=process.env.SCHEDULER_ENABLED==='false'?[]:require('./jobs/notificationScheduler').startScheduler();
+  let stopping=false;
+  const shutdown=async signal=>{
+    if(stopping)return;stopping=true;logger.info('server_stopping',{signal});
+    jobs.forEach(job=>job.stop());
+    const timer=setTimeout(()=>process.exit(1),10000);timer.unref();
+    server.close(async()=>{try{await pool.end();clearTimeout(timer);process.exit(0);}catch{process.exit(1);}});
+    server.closeIdleConnections();
+  };
+  process.on('SIGTERM',()=>shutdown('SIGTERM'));process.on('SIGINT',()=>shutdown('SIGINT'));
+  return server;
+}
+if(require.main===module)startServer().catch(error=>{logger.error('startup_failed',{code:logger.errorCode(error),...(error.message.startsWith('Invalid environment:')?{message:error.message}:{})});process.exit(1);});
+module.exports={startServer};

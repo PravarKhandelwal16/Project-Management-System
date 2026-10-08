@@ -1,244 +1,185 @@
 # Project Management System
 
-A full-stack web application designed for project and task tracking, team management, and status analytics.
+## Overview
 
-Dashboard, Projects, Tasks, Analytics and Calendar now share a planning workflow with task list/board views, actionable forms, project health and personal in-app reminders. See [Planning workflows and migration](docs/PLANNING.md). Existing installations must also run `npm --prefix server run migrate:planning`.
+A React/Vite, Express and MySQL workspace for projects, assigned tasks, team management, reporting and personal planning. Stage 7 adds automated testing, security hardening and reproducible release preparation without changing the product scope.
 
-The current release adds eight operational roles, editable role policies and individual permissions, account/profile management, project team rosters and workloads, and searchable audit history. See [Roles, permissions and management](docs/ACCESS_MANAGEMENT.md) for migration steps, defaults and workflows. Existing installations must run `npm --prefix server run migrate:access` before starting this version.
+## Features
 
----
+- JWT authentication, bcrypt password hashing and eight roles with editable policies/individual permissions.
+- Project/task CRUD, membership, eligible assignment, status/priority changes, search/filter/sort.
+- Scoped dashboard and analytics, account administration and searchable audit history.
+- In-app/email notifications, preferences, daily reminders and personal reminders/events.
+- Responsive pages, skeleton loaders, keyboard-accessible confirmations and Gmail compose links.
 
-## 🛠️ Technology Stack
+## Tech Stack
 
-- **Frontend:** React 19, Vite, Vanilla CSS
-- **Backend:** Node.js, Express 5
-- **Database:** MySQL 8.0+ (`mysql2/promise` connection pooling)
-- **Security & Tools:** JWT, bcrypt, express-rate-limit, cors, dotenv, nodemon
+React 19, Vite 8, Recharts, Express 5, Node.js 24, MySQL 8.0+, mysql2, bcrypt, JWT, Zod, Helmet. Tests use the existing **Node test runner** with native HTTP requests and c8 coverage; browser checks use Playwright Chromium.
 
----
+## Roles
 
-## 📁 Project Structure
+| Key | Responsibility |
+| --- | --- |
+| super_admin | Platform owner; protected permissions and administrator policy control |
+| admin | Workspace administration within protected account boundaries |
+| portfolio_manager | Cross-project oversight and reporting |
+| project_manager | Project delivery and staffing |
+| project_coordinator | Project/task coordination |
+| team_lead | Team task delivery |
+| member | Contributor; status updates for own assignments |
+| viewer | Read-only observer |
+
+Permissions can change; role names alone do not determine authorization. See [access management](docs/ACCESS_MANAGEMENT.md) and [security/authorization matrix](docs/SECURITY.md).
+
+## Project Structure
 
 ```text
-project-management-system/
-├── client/                     # Frontend React + Vite application
-│   ├── public/                 # Static assets
-│   ├── src/
-│   │   ├── components/         # Reusable UI components (e.g., StatusBadge)
-│   │   ├── context/            # React context providers (e.g., AuthContext)
-│   │   ├── pages/              # Page views (e.g., HomePage starter)
-│   │   ├── services/           # API and HTTP services (e.g., api.js)
-│   │   ├── utils/              # Constants, helpers, and shared types
-│   │   ├── App.jsx             # Main React component
-│   │   ├── index.css           # Modern design system & styles
-│   │   └── main.jsx            # React root entry point
-│   ├── index.html              # HTML template
-│   ├── package.json            # Frontend dependencies & scripts
-│   └── vite.config.js          # Vite configuration
-│
-├── server/                     # Backend Node.js + Express REST API
-│   ├── config/
-│   │   └── db.js               # MySQL pool configuration (mysql2/promise)
-│   ├── controllers/            # Route controllers (.gitkeep)
-│   ├── middleware/
-│   │   └── errorHandler.js     # Centralized error handling
-│   ├── models/                 # Database models / query handlers (.gitkeep)
-│   ├── routes/
-│   │   ├── healthRoutes.js     # GET /api/health endpoint
-│   │   └── index.js            # Main API route router
-│   ├── utils/                  # Utility helper functions (.gitkeep)
-│   ├── .env.example            # Backend environment variables template
-│   ├── app.js                  # Express application setup
-│   ├── package.json            # Backend dependencies & scripts
-│   └── server.js               # Server entry point & DB connection check
-│
-├── database/
-│   └── schema.sql              # MySQL schema for users, projects, tasks, audit_logs
-│
-├── .env.example                # Root environment variables template
-├── .gitignore                  # Git ignore rules
-├── package.json                # Root convenience scripts
-├── PROJECT_DESCRIPTION.md      # Detailed project specification
-└── README.md                   # Setup guide and documentation
+client/                    React UI, Playwright tests and production build
+server/
+  controllers/ services/   API and domain logic
+  middleware/ config/      Auth, RBAC, validation and environment/security setup
+  tests/unit/              Isolated validation, JWT, access and date logic
+  tests/integration/       API, migration, audit and notification flows
+  tests/helpers/           Disposable fixtures and database safeguards
+  scripts/                 Migrations, test runner, safe bootstrap and demo seed
+shared/                    Constants, access catalog and Zod validation
+database/                  Base schema and documented migration sequence
+deployment/                Dockerfiles, Compose and reverse proxy configuration
+docs/                      API/OpenAPI/Postman, testing, deployment and checklist
 ```
 
----
+## Prerequisites
 
-## 📋 Prerequisites
+- Node.js **24** and npm (use `.nvmrc`).
+- MySQL **8.0+**; CI targets MySQL 8.4.
+- A database account allowed to create tables for migrations.
+- Tests need a separate account/database namespace with CREATE/DROP privileges restricted to test databases.
+- Optional Docker Engine/Compose for the container deployment path.
 
-Before starting, ensure you have the following installed on your machine:
-- **Node.js** (v18 or higher, v20+ recommended)
-- **npm** (v9 or higher)
-- **MySQL Server** (v8.0 or higher)
+## Installation
 
----
+Clone this repository, then from its root:
 
-## 🗄️ Database Setup
-
-### 1. Start MySQL Server
-Ensure your MySQL service is running. On Windows:
 ```powershell
-Get-Service *mysql*
-```
-
-### 2. Create the Database and Execute `schema.sql`
-
-You can execute `database/schema.sql` using any of the following methods:
-
-#### Option A: Using MySQL Command-Line Client
-```bash
-mysql -u root -p < database/schema.sql
-```
-*(Enter your MySQL root password when prompted)*
-
-#### Option B: From inside the MySQL Shell
-```sql
-mysql -u root -p
-```
-Then run:
-```sql
-SOURCE /absolute/path/to/Project-Management-System/database/schema.sql;
-```
-
-#### Option C: Using MySQL Workbench
-1. Open **MySQL Workbench** and connect to your local instance.
-2. Go to **File** &rarr; **Open SQL Script...**
-3. Select `database/schema.sql`.
-4. Click the **Execute (lightning bolt)** button.
-
-### Tables Created:
-- `users`: ID, full name, unique email, password hash, role (`user`, `admin`), timestamps.
-- `projects`: ID, user ID (foreign key), name, description, status (`Not Started`, `In Progress`, `Completed`), dates, timestamps.
-- `tasks`: ID, project ID (FK), user ID (FK), name, description, priority (`Low`, `Medium`, `High`), status (`Pending`, `In Progress`, `Completed`), due date, timestamps.
-- `audit_logs`: ID, user ID (FK), action, resource type, resource ID, details, timestamp.
-
----
-
-## ⚙️ Environment Configuration
-
-1. In the `server/` directory, create a `.env` file from `.env.example`:
-
-```bash
-# On Linux / macOS / Git Bash:
-cp server/.env.example server/.env
-
-# On Windows PowerShell:
+npm ci
+npm ci --prefix server
+npm ci --prefix client
 Copy-Item server/.env.example server/.env
+Copy-Item client/.env.example client/.env
 ```
 
-2. Open `server/.env` and fill in your MySQL credentials:
+On macOS/Linux use `cp` in place of `Copy-Item`. Do not copy over an existing configured environment file.
 
-```env
-PORT=5000
-DB_HOST=localhost
-DB_USER=root
-DB_PASSWORD=your_mysql_password
-DB_NAME=project_management
-JWT_SECRET=your_jwt_secret_key_here
+## Environment Variables
+
+Configure `server/.env`. `server/.env.example` lists every setting. The root `.env` is an optional fallback; shell/deployment variables take precedence. Generate a random JWT secret:
+
+```powershell
+node -e "console.log(require('crypto').randomBytes(48).toString('base64url'))"
 ```
 
-> **Note:** `.env` is ignored by Git and will not be committed to the repository.
+Set DB_HOST/PORT/USER/PASSWORD/NAME, JWT_SECRET, FRONTEND_URL and APP_TIMEZONE. Production requires a non-root DB user, nonempty DB password, a strong secret, an exact HTTPS frontend origin and a valid token lifetime. Never commit configured env files.
 
----
+`client/.env` uses `VITE_API_URL=/api`. This is public build-time configuration, never a place for secrets. Vite proxies /api locally; the production proxy sends /api to Express. An external API origin can be configured before building if required.
 
-## 🚀 Running the Application
+## Database Setup
 
-### 1. Install Dependencies
+Create your configured database using your MySQL administration tool:
 
-You can install all dependencies from the root directory:
-```bash
-npm run install:all
+```sql
+CREATE DATABASE project_management CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 ```
 
-Or install separately in each folder:
-```bash
-# Backend dependencies
-cd server
-npm install
+Then:
 
-# Frontend dependencies
-cd ../client
-npm install
+```powershell
+npm run db:migrate
 ```
 
----
+The migration command uses **DB_NAME**, strips legacy hardcoded database selection, creates missing tables, and applies idempotent access/planning/release migrations. It does not drop tables or seed accounts. Back up existing deployments before schema changes. [Migration guide](database/README.md) covers historical Stage 3/4 files. [DATABASE.md](DATABASE.md) documents all tables and the ER diagram.
 
-### 2. Start Backend and Frontend Separately
+## Backend Setup
 
-#### Terminal 1 — Start Backend Server:
-```bash
-cd server
-npm run dev
+`npm --prefix server start` validates configuration and database/schema connectivity before accepting traffic. It uses a bounded connection pool, UTC database sessions, graceful SIGTERM/SIGINT shutdown and configurable scheduler. `npm --prefix server run dev` uses Node's built-in watcher.
+
+To bootstrap the first platform owner, set SUPER_ADMIN_EMAIL, SUPER_ADMIN_NAME and SUPER_ADMIN_PASSWORD locally, then run:
+
+```powershell
+npm --prefix server run bootstrap:admin
 ```
-- Server starts at: `http://localhost:5000`
-- Verifies MySQL connection automatically on startup.
-- Health check available at: `http://localhost:5000/api/health`
 
-#### Terminal 2 — Start Frontend Application:
-```bash
-cd client
-npm run dev
+The script refuses to overwrite/elevate existing accounts or create another owner once a Super Admin exists. Remove bootstrap credentials after use. Administrators can then create operational accounts through the UI.
+
+## Frontend Setup
+
+`npm --prefix client run dev` serves the UI at http://localhost:5173. For a static release:
+
+```powershell
+npm --prefix client run build
 ```
-- Vite dev server starts at: `http://localhost:5173` (or port specified in terminal output).
-- Open `http://localhost:5173` in your browser.
 
----
+Publish `client/dist` with SPA fallback and an /api reverse proxy. `vite preview` is a local build check, not a production web server.
 
-### 3. Alternative: Running from Root Directory
+## Running Locally
 
-From the project root:
-```bash
-# Start backend in development mode (nodemon)
+Run in separate terminals:
+
+```powershell
 npm run dev:server
-
-# In another terminal, start frontend (vite)
 npm run dev:client
 ```
 
----
+Check http://localhost:5000/api/health for process liveness and /api/ready for database readiness. Login with your bootstrapped account or optional demo accounts.
 
-## 🔍 Verification
+## Testing
 
-### 1. Backend Health Check
-Send a `GET` request to `/api/health`:
-```bash
-curl http://localhost:5000/api/health
-```
-Response:
-```json
-{
-  "success": true,
-  "message": "API is running"
-}
+```powershell
+npm run test:unit
+npm run test:integration
+npm run test:coverage
+npx --prefix client playwright install chromium
+npm --prefix client test
+npm run check
 ```
 
-### 2. Frontend Starter Verification
-Navigate to `http://localhost:5173`. You will see the application login page.
+`npm test` runs backend and browser tests. Integration tests generate/drop only isolated DB_NAME_TEST databases. Direct destructive test runs require NODE_ENV=test; database safety checks refuse development/production names. Emails are mocked; the email transport rejects real SMTP in test mode. [Testing guide](docs/TESTING.md) explains privileges, coverage and browser fixtures.
 
----
+## API Documentation
 
-## 👥 Pre-Configured Test Profiles
+[API reference](docs/API.md), [OpenAPI JSON](docs/api/openapi.json) and [Postman collection](docs/api/Project-Management-System.postman_collection.json) cover all routes. Postman variables contain no real credentials. Use a demo database for mutation examples.
 
-The system comes pre-seeded with test accounts covering all Role-Based Access Control (RBAC) tiers:
+## Notification Setup
 
-| Role | Name | Email | Password | Access Scope & Key Features |
-| :--- | :--- | :--- | :--- | :--- |
-| **Super Admin** | System Super Admin | `admin@projectmanagement.com` | `SuperAdmin123!` | Complete platform authority: User Management (`/admin/users`), Audit Logs (`/admin/audit-logs`), all projects & tasks |
-| **Admin** | Stage4 Admin | `admin@teststage4.com` | `Password123!` | Administrative control: Role modification, security audit logs, workspace oversight |
-| **Project Manager** | Stage4 PM 1 | `pm1@teststage4.com` | `Password123!` | Project leadership: Create/manage projects, add members, assign tasks, set deadlines |
-| **Project Manager (Alt)** | Stage4 PM 2 | `pm2@teststage4.com` | `Password123!` | Secondary PM for multi-project workflows and task reassignments |
-| **Team Member** | Stage4 Member 1 | `member1@teststage4.com` | `Password123!` | Contributor: View assigned projects/tasks, update status (`Pending` → `In Progress` → `Completed`), view personal dashboard |
-| **Team Member (Alt)** | Stage4 Member 2 | `member2@teststage4.com` | `Password123!` | Secondary contributor for testing task re-assignment & notification triggers |
+SMTP_HOST empty disables outbound email. Configure SMTP_HOST/PORT/USER/PASS/FROM to enable it. Certificates are verified; port 465 uses implicit TLS, production other ports require STARTTLS. Personal reminders remain in-app notifications.
 
-### 🧪 Automated Notification & Reminder Testing
+APP_TIMEZONE controls the daily deadline schedule; REMINDER_CRON defaults to 08:00. SCHEDULER_ENABLED=false disables jobs. Use one active scheduler per deployment. Daily web deliveries are transactional and database-deduplicated; email attempts have a daily claim to prevent duplicates. Failed/uncertain email attempts are not automatically retried that day. [Planning guide](docs/PLANNING.md) contains personal reminder behavior.
 
-```bash
-# In the server directory:
-cd server
+## Deployment
 
-# 1. Test Email Service (simulated output or SMTP if configured)
-npm run test:email
+[Deployment guide](docs/DEPLOYMENT.md) covers manual/static hosting and Docker Compose, HTTPS, migration order, least-privilege MySQL, backups, rollback, smoke tests and proxy configuration. Files are prepared; no live deployment is performed by this stage.
 
-# 2. Test Scheduled Reminder Job (evaluates tasks due tomorrow & overdue)
-npm run test:reminders
+## Security Notes
+
+See [security review](docs/SECURITY.md) for route-by-route authorization, SQL/validation review, CORS, logging and known limits. JWT logout is stateless; copied tokens expire naturally or become unusable after account deactivation. Browser tokens remain in localStorage; HTTPS and frontend CSP reduce exposure, but XSS prevention still matters.
+
+## Demo Accounts
+
+Demo data is optional and **development-only**. Use a separate database whose name ends in `_demo`, set NODE_ENV=development and ALLOW_DEMO_SEED=true, migrate it, then run:
+
+```powershell
+npm --prefix server run seed:demo
 ```
+
+The script creates all eight `<role>@pms.demo.invalid` accounts, a sample project and task. It generates a strong shared demo password and prints it once, or uses DEMO_PASSWORD you provide. It refuses existing demo accounts and production/test mode. No credentials are embedded in production code.
+
+## Future Mobile Support
+
+The REST API and shared schemas can support another client. No mobile application or additional major product features are included in Stage 7.
+
+## Submission
+
+Follow [final checklist](docs/SUBMISSION_CHECKLIST.md). Operational setup and role behavior in this README/API documentation supersede historical examples.
+
+## License
+
+Package metadata declares ISC.

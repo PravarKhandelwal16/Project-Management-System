@@ -6,24 +6,25 @@ import {
   markAllNotificationsReadApi, 
   markNotificationReadApi 
 } from '../services/api';
-import { Bell, Check, Clock, Calendar, CheckCircle, AlertTriangle } from 'lucide-react';
+import { Bell, Check, Clock, CheckCircle, AlertTriangle } from 'lucide-react';
 import './Dashboard.css'; // Reuse dashboard styles where possible
 
 const Notifications = () => {
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const [filter, setFilter] = useState('all'); // 'all', 'unread'
   const navigate = useNavigate();
 
   const fetchNotifications = async () => {
     try {
-      setLoading(true);
+      setLoading(true);setError('');
       const res = await getNotificationsApi({ limit: 100 });
       if (res.success) {
         setNotifications(res.data);
       }
     } catch (err) {
-      console.error('Failed to fetch notifications', err);
+      setError(err.message);
     } finally {
       setLoading(false);
     }
@@ -40,7 +41,7 @@ const Notifications = () => {
         setNotifications(notifications.map(n => ({ ...n, is_read: 1 })));
       }
     } catch (err) {
-      console.error('Failed to mark all as read', err);
+      setError(err.message);
     }
   };
 
@@ -138,6 +139,7 @@ const Notifications = () => {
           </div>
 
           <div style={{ padding: '20px' }}>
+            {error && <div className="management-notice error" role="alert">{error}<button className="management-button secondary" onClick={fetchNotifications}>Try again</button></div>}
             {loading ? (
               <Skeleton label="Loading notifications" rows={4}/>
             ) : filteredNotifications.length === 0 ? (

@@ -1,6 +1,5 @@
-require('dotenv').config();
+require('../config/env');
 const { runReminders } = require('../jobs/taskReminderJob');
-const mysql = require('mysql2/promise');
 
 const main = async () => {
   try {
@@ -9,7 +8,7 @@ const main = async () => {
     console.log(`Manual trigger complete. Processed: ${count}`);
     process.exit(0);
   } catch (err) {
-    console.error('Error running test:reminders:', err);
+    require('../utils/logger').error('manual_reminder_run_failed',{code:require('../utils/logger').errorCode(err)});
     process.exit(1);
   }
 };

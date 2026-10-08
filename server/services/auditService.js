@@ -15,7 +15,7 @@ const logAuditEvent = async ({ userId, action, resourceType, resourceId, details
     });
   } catch (error) {
     // Non-blocking error handling: Log warning but prevent crashing the main transaction
-    console.error(`[AuditLog Warning] Failed to write audit log for action "${action}":`, error.message);
+    require('../utils/logger').error('audit_write_failed',{action,code:require('../utils/logger').errorCode(error)});
   }
 };
 

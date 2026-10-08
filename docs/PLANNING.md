@@ -33,7 +33,7 @@ npm --prefix server run migrate:planning
 
 This creates the reminders, calendar_events and calendar_colours tables without changing existing projects/tasks. It is safe to rerun. The migration is applied to the local development database in this workspace. Run it on other databases before starting this version.
 
-For a fresh installation, apply `database/schema.sql`, the Stage 6 notification migration, `npm --prefix server run migrate:access` and finally the planning migration. MySQL 8.0+ is required for the worker locking.
+For fresh installations and current upgrades, run `npm --prefix server run db:migrate` after creating the configured database. This also applies the Stage 7 release indexes/delivery keys. See [migration order](../database/README.md). MySQL 8.0+ is required for the worker locking.
 
 ## API additions
 
@@ -81,3 +81,7 @@ Team and project member lists offer an **Email** link. It opens a Gmail compose 
 The integration suite also validates event ownership, date/time validation, private audit details, saved category/item colours and independent per-account resets.
 
 Destructive actions use an app-styled confirmation dialog rather than `window.confirm`. It names the affected item and consequence, starts focus on Cancel, supports Escape and keyboard navigation, and prevents background interaction. Project/task/reminder/event deletion, member removal, account status changes and calendar-colour resets all use this shared confirmation flow. Cancelling does not send the mutation request.
+
+## Stage 7 automatic task reminders
+
+Daily deadline reminders use APP_TIMEZONE and REMINDER_CRON (default 08:00). Due-tomorrow and overdue notifications respect each channel preference; completed/inaccessible tasks and inactive users are skipped. Unique daily keys in notification_logs prevent overlapping workers from duplicating a delivery. Web notifications commit transactionally; email attempts are claimed before sending. Failed/uncertain email attempts are not automatically retried that day. SMTP_HOST empty disables email; production requires verified TLS. See [deployment](DEPLOYMENT.md) for one-scheduler operation and [testing](TESTING.md) for email mocks.

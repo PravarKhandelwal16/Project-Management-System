@@ -1,23 +1,8 @@
 import { z } from 'zod';
 import { PROJECT_STATUS_VALUES } from '../constants/projectStatus.js';
-
-export const createProjectSchema = z.object({
-  name: z.string().min(1, "Project name is required").max(100),
-  description: z.string().optional(),
-  status: z.enum(PROJECT_STATUS_VALUES).default('Not Started'),
-  start_date: z.string().optional().nullable(),
-  end_date: z.string().optional().nullable()
-});
-
-export const updateProjectSchema = z.object({
-  name: z.string().min(1, "Project name is required").max(100).optional(),
-  description: z.string().optional().nullable(),
-  status: z.enum(PROJECT_STATUS_VALUES).optional(),
-  start_date: z.string().optional().nullable(),
-  end_date: z.string().optional().nullable()
-});
-
-export default {
-  createProjectSchema,
-  updateProjectSchema
-};
+import { optionalDate,descriptionField } from './fields.js';
+const fields={name:z.string().trim().min(2).max(255),description:descriptionField,status:z.enum(PROJECT_STATUS_VALUES),start_date:optionalDate,end_date:optionalDate};
+const dates=data=>!data.start_date||!data.end_date||data.end_date>=data.start_date;
+export const createProjectSchema=z.object({...fields,status:fields.status.default('Not Started')}).strict().refine(dates,'End date cannot precede start date');
+export const updateProjectSchema=z.object(fields).partial().strict().refine(dates,'End date cannot precede start date');
+export default {createProjectSchema,updateProjectSchema};

@@ -1,4 +1,4 @@
-const jwt = require('jsonwebtoken');
+const {verifyToken}=require('../utils/tokens');
 const userModel = require('../models/userModel');
 const { resolveAccess } = require('../services/accessService');
 
@@ -28,15 +28,15 @@ const authenticateToken = async (req, res, next) => {
 
   const secret = process.env.JWT_SECRET;
   if (!secret) {
-    console.error('[Security Warning] JWT_SECRET is not configured in environment variables');
+    require('../utils/logger').error('missing_jwt_configuration');
     return res.status(500).json({
       success: false,
-      message: 'Internal server security configuration error',
+      message: 'Internal server error',
     });
   }
 
   try {
-    const decoded = jwt.verify(token, secret);
+    const decoded = verifyToken(token);
 
     // Database-backed verification to prevent stale JWT claims
     const user = await userModel.findById(decoded.id);

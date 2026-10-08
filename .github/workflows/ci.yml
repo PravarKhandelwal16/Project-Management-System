@@ -1,0 +1,44 @@
+name: Quality checks
+on: [push, pull_request]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_ROOT_PASSWORD: ci-isolated-only
+        ports: ["3306:3306"]
+        options: >-
+          --health-cmd="mysqladmin ping --host=localhost --silent"
+          --health-interval=10s --health-timeout=5s --health-retries=12
+    env:
+      DB_HOST: 127.0.0.1
+      DB_PORT: 3306
+      DB_USER: root
+      DB_PASSWORD: ci-isolated-only
+      DB_NAME: project_management_unused
+      DB_NAME_TEST: project_management_test
+      JWT_SECRET: ci-tests-only-not-a-production-secret
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: '24', cache: npm, cache-dependency-path: 'server/package-lock.json'}
+      - run: npm ci
+      - run: npm ci --prefix server
+      - run: npm ci --prefix client
+      - run: npm --prefix server run test:coverage
+      - run: npm --prefix client run lint
+      - run: npm --prefix client run build
+      - run: npx --prefix client playwright install --with-deps chromium
+      - run: npm --prefix client test
+      - run: npm audit --omit=dev --audit-level=high --prefix server
+      - run: npm audit --audit-level=high --prefix client
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: quality-reports
+          path: |
+            server/coverage
+            client/playwright-report
+            client/test-results

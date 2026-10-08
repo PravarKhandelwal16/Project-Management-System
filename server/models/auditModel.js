@@ -2,7 +2,7 @@ const { pool } = require('../config/db');
 const { auditContext } = require('../middleware/auditContext');
 function redact(value) {
   if (Array.isArray(value)) return value.map(redact);
-  if (value && typeof value === 'object') return Object.fromEntries(Object.entries(value).map(([key, item]) => [key, /password|secret|token/i.test(key) ? '[REDACTED]' : redact(item)]));
+  if (value && typeof value === 'object') return Object.fromEntries(Object.entries(value).map(([key, item]) => [key, /password|secret|token|authorization|cookie|smtp_pass/i.test(key) ? '[REDACTED]' : redact(item)]));
   return value;
 }
 async function createAuditLog({ userId = null, action, resourceType, resourceId = null, details = null, actor }, executor = pool) {

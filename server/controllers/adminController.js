@@ -35,6 +35,8 @@ async function target(connection, req, nextRole) {
 }
 const getUsers = async (req, res, next) => {
   try {
+    if (req.query.role && !catalog.roles.some(role => role.key === req.query.role)) throw fail(400, 'Invalid role filter.');
+    if (req.query.is_active !== undefined && !['','true','false','1','0'].includes(req.query.is_active)) throw fail(400, 'Invalid account status filter.');
     const { page, limit } = pagination(req.query);
     const users = await userModel.findAll({ ...req.query, page, limit });
     res.json({ success: true, ...users, page, limit });

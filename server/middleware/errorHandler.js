@@ -1,17 +1,9 @@
-/**
- * Centralized Error Handling Middleware
- */
-const errorHandler = (err, req, res, next) => {
-  const statusCode = err.statusCode || 500;
-  const message = statusCode >= 500 && process.env.NODE_ENV !== 'development' ? 'Something went wrong. Please try again.' : err.message || 'Internal Server Error';
-
-  if (statusCode >= 500) console.error(`[Error] ${req.method} ${req.path}:`, err.stack || err.message);
-
-  res.status(statusCode).json({
-    success: false,
-    message,
-    ...(process.env.NODE_ENV === 'development' && { stack: err.stack }),
-  });
+const logger=require('../utils/logger');
+module.exports=(err,req,res,next)=>{
+  if(res.headersSent)return next(err);
+  const requested=Number(err.statusCode||err.status||500);
+  const status=Number.isInteger(requested)&&requested>=400&&requested<=599?requested:500;
+  const message=err.type==='entity.parse.failed'?'Invalid JSON request body.':status===413?'Request body is too large.':status>=500?'Internal server error':err.message||'Request failed';
+  if(status>=500)logger.error('request_failed',{method:req.method,path:req.path,code:logger.errorCode(err),status});
+  res.status(status).json({success:false,message});
 };
-
-module.exports = errorHandler;

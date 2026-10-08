@@ -58,8 +58,8 @@ const validatePassword = (password) => {
   if (password.length < 8) {
     return { isValid: false, error: 'Password must be at least 8 characters long' };
   }
-  if (password.length > 128) {
-    return { isValid: false, error: 'Password cannot exceed 128 characters' };
+  if (Buffer.byteLength(password, 'utf8') > 72) {
+    return { isValid: false, error: 'Password cannot exceed 72 UTF-8 bytes' };
   }
   const hasLetter = /[a-zA-Z]/.test(password);
   const hasNumber = /[0-9]/.test(password);
@@ -98,18 +98,15 @@ const validateLoginInput = ({ email, password }) => {
   }
   const emailCheck = validateEmail(email);
   if (!emailCheck.isValid) return emailCheck;
-
+  if (Buffer.byteLength(password,'utf8') > 72) return {isValid:false,error:'Password cannot exceed 72 UTF-8 bytes'};
   return { isValid: true };
 };
 
 /**
  * Validates date string (YYYY-MM-DD)
  */
-const isValidDateString = (dateStr) => {
-  if (!dateStr) return true;
-  const d = new Date(dateStr);
-  return !isNaN(d.getTime());
-};
+const isValidDateString = value => value == null || value === '' || (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value) && value >= '1000-01-01' && Number.isFinite(Date.parse(value)) && new Date(value).toISOString().slice(0,10) === value);
+const validDescription = value => value == null || typeof value === 'string' && value.length <= 5000;
 
 /**
  * Validates project create/update input payload
@@ -118,6 +115,7 @@ const validateProjectInput = ({ name, description, status, start_date, end_date 
   if (!name || typeof name !== 'string' || name.trim().length === 0) {
     return { isValid: false, error: 'Project name is required' };
   }
+  if (!validDescription(description)) return {isValid:false,error:'Description must be a string of at most 5000 characters.'};
   const trimmedName = name.trim();
   if (trimmedName.length < 2) {
     return { isValid: false, error: 'Project name must be at least 2 characters long' };
@@ -126,18 +124,18 @@ const validateProjectInput = ({ name, description, status, start_date, end_date 
     return { isValid: false, error: 'Project name cannot exceed 255 characters' };
   }
 
-  if (status && !VALID_PROJECT_STATUSES.includes(status)) {
+  if (status !== undefined && !VALID_PROJECT_STATUSES.includes(status)) {
     return {
       isValid: false,
       error: `Invalid status. Must be one of: ${VALID_PROJECT_STATUSES.join(', ')}`,
     };
   }
 
-  if (start_date && !isValidDateString(start_date)) {
+  if (!isValidDateString(start_date)) {
     return { isValid: false, error: 'Invalid start date format' };
   }
 
-  if (end_date && !isValidDateString(end_date)) {
+  if (!isValidDateString(end_date)) {
     return { isValid: false, error: 'Invalid end date format' };
   }
 
@@ -157,7 +155,7 @@ const validateProjectInput = ({ name, description, status, start_date, end_date 
  */
 const validateProjectSort = (sortBy = 'created_at', sortOrder = 'DESC') => {
   const cleanSortBy = ALLOWED_PROJECT_SORT_FIELDS.includes(sortBy) ? sortBy : 'created_at';
-  const cleanSortOrder = sortOrder && sortOrder.toUpperCase() === 'ASC' ? 'ASC' : 'DESC';
+  const cleanSortOrder = typeof sortOrder === 'string' && sortOrder.toUpperCase() === 'ASC' ? 'ASC' : 'DESC';
   return { sortBy: cleanSortBy, sortOrder: cleanSortOrder };
 };
 
@@ -181,7 +179,8 @@ const validateRole = (role) => {
 /**
  * Validates task creation / update payload
  */
-const validateTaskInput = ({ name, priority, status, due_date }, isCreate = false) => {
+const validateTaskInput = ({ name, description, priority, status, due_date }, isCreate = false) => {
+  if (!validDescription(description)) return {isValid:false,error:'Description must be a string of at most 5000 characters.'};
   if (isCreate && (name === undefined || name === null)) {
     return { isValid: false, error: 'Task name is required' };
   }
@@ -195,7 +194,7 @@ const validateTaskInput = ({ name, priority, status, due_date }, isCreate = fals
     }
   }
 
-  if (priority !== undefined && priority !== null) {
+  if (priority !== undefined) {
     if (!VALID_TASK_PRIORITIES.includes(priority)) {
       return {
         isValid: false,
@@ -204,7 +203,7 @@ const validateTaskInput = ({ name, priority, status, due_date }, isCreate = fals
     }
   }
 
-  if (status !== undefined && status !== null) {
+  if (status !== undefined) {
     if (!VALID_TASK_STATUSES.includes(status)) {
       return {
         isValid: false,
@@ -213,7 +212,7 @@ const validateTaskInput = ({ name, priority, status, due_date }, isCreate = fals
     }
   }
 
-  if (due_date && !isValidDateString(due_date)) {
+  if (!isValidDateString(due_date)) {
     return { isValid: false, error: 'Invalid due date format' };
   }
 
@@ -225,11 +224,12 @@ const validateTaskInput = ({ name, priority, status, due_date }, isCreate = fals
  */
 const validateTaskSort = (sortBy = 'created_at', sortOrder = 'DESC') => {
   const cleanSortBy = ALLOWED_TASK_SORT_FIELDS.includes(sortBy) ? sortBy : 'created_at';
-  const cleanSortOrder = sortOrder && sortOrder.toUpperCase() === 'ASC' ? 'ASC' : 'DESC';
+  const cleanSortOrder = typeof sortOrder === 'string' && sortOrder.toUpperCase() === 'ASC' ? 'ASC' : 'DESC';
   return { sortBy: cleanSortBy, sortOrder: cleanSortOrder };
 };
 
 module.exports = {
+  isValidDateString,
   validateFullName,
   validateEmail,
   validatePassword,

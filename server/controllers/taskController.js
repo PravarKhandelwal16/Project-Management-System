@@ -162,6 +162,7 @@ const createTask = async (req, res, next) => {
     // 2. Validate input fields
     const validation = validateTaskInput({
       name,
+      description,
       priority,
       status,
       due_date,
@@ -260,6 +261,7 @@ const updateTask = async (req, res, next) => {
     // Validate inputs
     const validation = validateTaskInput({
       name: name !== undefined ? name : currentTask.name,
+      description,
       priority: priority !== undefined ? priority : currentTask.priority,
       status: status !== undefined ? status : currentTask.status,
       due_date: due_date !== undefined ? due_date : currentTask.due_date,
@@ -485,7 +487,12 @@ const assignTask = async (req, res, next) => {
       }
     }
 
-    await taskModel.updateTaskAssignee(currentTask.id, targetUserId);
+    const changed = await taskModel.updateTaskAssignee(currentTask.id, targetUserId);
+    if (!changed) {
+      const updated = await taskModel.getTaskById(currentTask.id);
+      if (!updated) return res.status(404).json({ success: false, message: 'Task not found.' });
+      return res.status(200).json({ success: true, message: 'Task assignment unchanged', data: updated });
+    }
 
     await logAuditEvent({
       userId: req.user.id,

@@ -1,118 +1,48 @@
-const { pool } = require('../config/db');
-const { NOTIFICATION_TYPE, NOTIFICATION_CHANNEL, NOTIFICATION_STATUS } = require('../../shared/constants/notificationTypes');
-const notificationService = require('../services/notificationService');
-const emailService = require('../services/emailService');
-
-const runReminders = async () => {
-  console.log('Running task reminder job...');
-  let processed = 0;
-
-  try {
-    // Find tasks due tomorrow that are NOT completed
-    // Using simple date math (tomorrow = CURDATE() + INTERVAL 1 DAY)
-    const [tasks] = await pool.query(`
-      SELECT t.*, p.name as project_name, u.email, u.full_name, u.id as user_id 
-      FROM tasks t
-      JOIN projects p ON t.project_id = p.id
-      JOIN users u ON t.user_id = u.id
-      WHERE t.status != 'Completed'
-      AND DATE(t.due_date) = CURDATE() + INTERVAL 1 DAY
-      AND t.user_id IS NOT NULL
-    `);
-
-    for (const task of tasks) {
-      const prefs = await notificationService.ensurePreferences(task.user_id);
-      const user = { id: task.user_id, email: task.email, full_name: task.full_name };
-      const project = { id: task.project_id, name: task.project_name };
-      
-      // 1. Check Web Notification
-      if (prefs.web_due_tomorrow) {
-        const [existingWeb] = await pool.query(
-          `SELECT id FROM notification_logs 
-           WHERE user_id = ? AND task_id = ? AND notification_type = ? AND channel = ? AND DATE(sent_at) = CURDATE()`,
-          [user.id, task.id, NOTIFICATION_TYPE.TASK_DUE_TOMORROW, NOTIFICATION_CHANNEL.WEB]
-        );
-
-        if (existingWeb.length === 0) {
-          await notificationService.createWebNotification(
-            user.id,
-            NOTIFICATION_TYPE.TASK_DUE_TOMORROW,
-            'Task Due Tomorrow',
-            `Your task "${task.name}" in project "${project.name}" is due tomorrow.`,
-            'TASK',
-            task.id
-          );
-          await notificationService.logNotification(user.id, task.id, NOTIFICATION_TYPE.TASK_DUE_TOMORROW, NOTIFICATION_CHANNEL.WEB, NOTIFICATION_STATUS.SENT);
-          processed++;
+const {pool}=require('../config/db');
+const service=require('../services/notificationService'),email=require('../services/emailService'),logger=require('../utils/logger');
+const {resolveAccess,hasPermission,projectInScope}=require('../services/accessService');
+const {todayInZone,shiftDay,reminderType,dailyNotificationKey}=require('../utils/notificationDates');
+async function runReminders(){
+  const today=todayInZone(process.env.APP_TIMEZONE||'Asia/Kolkata');
+  const [tasks]=await pool.execute(`SELECT t.*,DATE_FORMAT(t.due_date,'%Y-%m-%d') AS due_date,p.name AS project_name,p.user_id AS project_owner_id,u.full_name,u.email,u.role,u.permission_overrides
+    FROM tasks t JOIN projects p ON t.project_id=p.id JOIN users u ON t.user_id=u.id
+    WHERE t.status!='Completed' AND t.due_date<=? AND u.is_active=1`,[shiftDay(today,1)]);
+  let processed=0;
+  for(const task of tasks){
+    const type=reminderType(task,today);if(!type)continue;
+    const user=await resolveAccess({id:task.user_id,role:task.role,permission_overrides:task.permission_overrides,email:task.email,full_name:task.full_name});
+    if(!hasPermission(user,'tasks.view')||!hasPermission(user,'projects.view')||!await projectInScope(user,{id:task.project_id,user_id:task.project_owner_id}))continue;
+    const prefs=await service.ensurePreferences(user.id);
+    const due=type==='TASK_DUE_TOMORROW',project={id:task.project_id,name:task.project_name};
+    for(const channel of ['WEB','EMAIL']){
+      if(!prefs[(channel==='WEB'?'web_':'email_')+(due?'due_tomorrow':'overdue')])continue;
+      const key=dailyNotificationKey(today,user.id,task.id,type,channel);
+      const connection=await pool.getConnection();
+      let claim;
+      try{
+        await connection.beginTransaction();
+        try{
+          const [result]=await connection.execute("INSERT INTO notification_logs (user_id,task_id,notification_type,channel,status,delivery_key) VALUES (?,?,?,?, 'PROCESSING',?)",[user.id,task.id,type,channel,key]);
+          claim=result.insertId;
+        }catch(error){if(error.code==='ER_DUP_ENTRY'){await connection.rollback();continue;}throw error;}
+        if(channel==='WEB'){
+          await connection.execute('INSERT INTO notifications (user_id,type,title,message,resource_type,resource_id) VALUES (?,?,?,?,?,?)',[user.id,type,due?'Task Due Tomorrow':'Task Overdue',`Your task "${task.name}" in project "${project.name}" is ${due?'due tomorrow':'overdue'}.`,'TASK',task.id]);
+          await connection.execute("UPDATE notification_logs SET status='SENT' WHERE id=?",[claim]);
+        }
+        await connection.commit();
+      }catch(error){await connection.rollback();throw error;}finally{connection.release();}
+      if(channel==='EMAIL'){
+        try{
+          const result=await (due?email.sendTaskReminderEmail:email.sendTaskOverdueEmail)(user,task,project);
+          await pool.execute('UPDATE notification_logs SET status=? WHERE id=?',[result.skipped?'SKIPPED':'SENT',claim]);
+        }catch(error){
+          await pool.execute("UPDATE notification_logs SET status='FAILED',error_message=? WHERE id=?",[logger.errorCode(error),claim]);
+          logger.error('reminder_email_failed',{code:logger.errorCode(error),task_id:task.id});
         }
       }
-
-      // 2. Check Email Notification
-      if (prefs.email_due_tomorrow) {
-        const [existingEmail] = await pool.query(
-          `SELECT id FROM notification_logs 
-           WHERE user_id = ? AND task_id = ? AND notification_type = ? AND channel = ? AND DATE(sent_at) = CURDATE()`,
-          [user.id, task.id, NOTIFICATION_TYPE.TASK_DUE_TOMORROW, NOTIFICATION_CHANNEL.EMAIL]
-        );
-
-        if (existingEmail.length === 0) {
-          try {
-            await emailService.sendTaskReminderEmail(user, task, project);
-            await notificationService.logNotification(user.id, task.id, NOTIFICATION_TYPE.TASK_DUE_TOMORROW, NOTIFICATION_CHANNEL.EMAIL, NOTIFICATION_STATUS.SENT);
-            processed++;
-          } catch (err) {
-            await notificationService.logNotification(user.id, task.id, NOTIFICATION_TYPE.TASK_DUE_TOMORROW, NOTIFICATION_CHANNEL.EMAIL, NOTIFICATION_STATUS.FAILED, err.message);
-          }
-        }
-      }
+      processed++;
     }
-
-    // Overdue tasks (due_date < CURDATE())
-    const [overdueTasks] = await pool.query(`
-      SELECT t.*, p.name as project_name, u.email, u.full_name, u.id as user_id 
-      FROM tasks t
-      JOIN projects p ON t.project_id = p.id
-      JOIN users u ON t.user_id = u.id
-      WHERE t.status != 'Completed'
-      AND DATE(t.due_date) < CURDATE()
-      AND t.user_id IS NOT NULL
-    `);
-
-    for (const task of overdueTasks) {
-      const prefs = await notificationService.ensurePreferences(task.user_id);
-      const user = { id: task.user_id, email: task.email, full_name: task.full_name };
-      const project = { id: task.project_id, name: task.project_name };
-      
-      // Web Overdue
-      if (prefs.web_overdue) {
-        const [existingOverdue] = await pool.query(
-          `SELECT id FROM notification_logs 
-           WHERE user_id = ? AND task_id = ? AND notification_type = ? AND channel = ? AND DATE(sent_at) = CURDATE()`,
-          [user.id, task.id, NOTIFICATION_TYPE.TASK_OVERDUE, NOTIFICATION_CHANNEL.WEB]
-        );
-
-        if (existingOverdue.length === 0) {
-          await notificationService.createWebNotification(
-            user.id,
-            NOTIFICATION_TYPE.TASK_OVERDUE,
-            'Task Overdue',
-            `Your task "${task.name}" in project "${project.name}" is overdue.`,
-            'TASK',
-            task.id
-          );
-          await notificationService.logNotification(user.id, task.id, NOTIFICATION_TYPE.TASK_OVERDUE, NOTIFICATION_CHANNEL.WEB, NOTIFICATION_STATUS.SENT);
-          processed++;
-        }
-      }
-    }
-
-    console.log(`Task reminder job completed. Processed ${processed} notifications.`);
-    return processed;
-  } catch (error) {
-    console.error('Error running task reminder job:', error);
   }
-};
-
-module.exports = {
-  runReminders
-};
+  logger.info('task_reminders_completed',{processed});return processed;
+}
+module.exports={runReminders};

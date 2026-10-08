@@ -1,5 +1,5 @@
 const bcrypt = require('bcrypt');
-const jwt = require('jsonwebtoken');
+const {signToken}=require('../utils/tokens');
 const userModel = require('../models/userModel');
 const { resolveAccess } = require('../services/accessService');
 const { logAuditEvent } = require('../services/auditService');
@@ -33,7 +33,7 @@ const register = async (req, res, next) => {
     // 2. Check for duplicate email
     const existingUser = await userModel.findByEmail(normalizedEmail);
     if (existingUser) {
-      return res.status(400).json({
+      return res.status(409).json({
         success: false,
         message: 'An account with this email already exists',
       });
@@ -71,6 +71,7 @@ const register = async (req, res, next) => {
       message: 'User registered successfully',
     });
   } catch (error) {
+    if(error.code==='ER_DUP_ENTRY')return res.status(409).json({success:false,message:'An account with this email already exists'});
     next(error);
   }
 };
@@ -125,25 +126,17 @@ const login = async (req, res, next) => {
     // 4. Generate JWT token
     const secret = process.env.JWT_SECRET;
     if (!secret) {
-      console.error('[Security Warning] JWT_SECRET is not configured in environment variables');
+      require('../utils/logger').error('missing_jwt_configuration');
       return res.status(500).json({
         success: false,
-        message: 'Internal server security configuration error',
+        message: 'Internal server error',
       });
     }
 
-    const tokenPayload = {
-      id: user.id,
-      email: user.email,
-      role: user.role,
-    };
-
-    const token = jwt.sign(tokenPayload, secret, {
-      expiresIn: process.env.JWT_EXPIRES_IN || '24h',
-    });
+    const token = signToken(user.id);
 
     // 5. Record audit log
-    const clientIp = req.ip || req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'unknown';
+    const clientIp = req.ip || 'unknown';
     await logAuditEvent({
       userId: user.id,
       actor: { full_name: user.full_name, email: user.email },

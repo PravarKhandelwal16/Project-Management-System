@@ -46,3 +46,12 @@ Thumbs.db
 # Others
 PROJECT_DESCRIPTION.md
 scratch/
+# Test artifacts and environment variants
+coverage/
+playwright-report/
+test-results/
+.env.*
+!.env.example
+!*.env.example
+
+deployment/deployment.env

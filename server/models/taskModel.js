@@ -231,9 +231,9 @@ const updateTaskAssignee = async (id, userId) => {
   const sql = `
     UPDATE tasks
     SET user_id = ?
-    WHERE id = ?
+    WHERE id = ? AND NOT (user_id <=> ?)
   `;
-  const [result] = await pool.execute(sql, [userId || null, id]);
+  const [result] = await pool.execute(sql, [userId || null, id, userId || null]);
   return result.affectedRows > 0;
 };
 

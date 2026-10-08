@@ -1,28 +1,30 @@
+import { lazy, Suspense } from 'react';
+import Skeleton from './components/Skeleton';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import PublicRoute from './components/PublicRoute';
-import Login from './pages/Login';
-import Register from './pages/Register';
-import Dashboard from './pages/Dashboard';
-import Projects from './pages/Projects';
-import ProjectDetails from './pages/ProjectDetails';
-import AdminUsers from './pages/AdminUsers';
+const Login = lazy(() => import('./pages/Login'));
+const Register = lazy(() => import('./pages/Register'));
+const Dashboard = lazy(() => import('./pages/Dashboard'));
+const Projects = lazy(() => import('./pages/Projects'));
+const ProjectDetails = lazy(() => import('./pages/ProjectDetails'));
+const AdminUsers = lazy(() => import('./pages/AdminUsers'));
 import AppLayout from './components/layout/AppLayout';
-import AdminAuditLogs from './pages/AdminAuditLogs';
-import Tasks from './pages/Tasks';
-import TaskDetails from './pages/TaskDetails';
-import Analytics from './pages/Analytics';
-import CalendarPage from './pages/Calendar';
-import Team from './pages/Team';
-import Notifications from './pages/Notifications';
-import Settings from './pages/Settings';
+const AdminAuditLogs = lazy(() => import('./pages/AdminAuditLogs'));
+const Tasks = lazy(() => import('./pages/Tasks'));
+const TaskDetails = lazy(() => import('./pages/TaskDetails'));
+const Analytics = lazy(() => import('./pages/Analytics'));
+const CalendarPage = lazy(() => import('./pages/Calendar'));
+const Team = lazy(() => import('./pages/Team'));
+const Notifications = lazy(() => import('./pages/Notifications'));
+const Settings = lazy(() => import('./pages/Settings'));
 
 function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <Routes>
+        <Suspense fallback={<div style={{padding:24}}><Skeleton label="Opening page"/></div>}><Routes>
           {/* Public Authentication Routes */}
           <Route
             path="/login"
@@ -169,7 +171,7 @@ function App() {
           {/* Fallback & Root Redirections */}
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
-        </Routes>
+        </Routes></Suspense>
       </AuthProvider>
     </BrowserRouter>
   );

@@ -47,7 +47,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .skeleton-calendar { display: grid; grid-template-columns: repeat(7,minmax(0,1fr)); gap: 1px; background: var(--border-color); border: 1px solid var(--border-color); border-radius: 12px; overflow: hidden; }
 .skeleton-calendar .skeleton-card { height: 110px; padding: 14px; border: 0; border-radius: 0; }
 /* A full-cell date button sits beneath separately clickable event controls. */
-.calendar-day { position: relative; padding: 43px 7px 9px; transition: background-color 160ms ease; }
+.calendar-grid .calendar-day { position: relative; padding: 43px 7px 9px; transition: background-color 160ms ease; }
 .calendar-day-select { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; background: transparent; text-align: left; border-radius: 0; }
 .calendar-day-select .calendar-day-number { position: absolute; top: 9px; left: 7px; display: grid; place-items: center; margin: 0; pointer-events: none; }
 .calendar-day-select:hover { background: #2563eb08; }
@@ -78,7 +78,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 @keyframes page-arrive { from { opacity: 0; } to { opacity: 1; } }
 @keyframes card-arrive { from { opacity: 0; transform: translateY(5px) scale(.99); } to { opacity: 1; transform: none; } }
 @keyframes skeleton-shimmer { from { background-position: 100% 0; } to { background-position: -100% 0; } }
-@media(max-width:750px) { .skeleton-metrics { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 10px; } .skeleton-calendar .skeleton-card { height: 85px; padding: 7px; } .calendar-day { padding: 38px 3px 5px; } .calendar-day-select .calendar-day-number { top: 5px; left: 3px; } .calendar-event { font-size: 9px; } }
+@media(max-width:750px) { .skeleton-metrics { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 10px; } .skeleton-calendar .skeleton-card { height: 85px; padding: 7px; } .calendar-grid .calendar-day { padding: 38px 3px 5px; } .calendar-day-select .calendar-day-number { top: 5px; left: 3px; } .calendar-event { font-size: 9px; } }
 @media(prefers-reduced-motion:reduce) { *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; } }
 /* App-styled confirmations use the browser top layer for safe nested modals. */
 .confirmation-dialog { position: fixed; inset: 0; width: min(440px,calc(100vw - 32px)); max-height: calc(100dvh - 48px); overflow: auto; margin: auto; padding: 28px; border: 1px solid #e2e8f0; border-radius: 18px; background: white; color: var(--text-primary); box-shadow: 0 24px 80px #0f172a33; animation: card-arrive 180ms ease-out; }
@@ -92,3 +92,6 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .confirmation-actions { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 10px; }
 .confirmation-dialog .confirmation-destructive { background: #dc2626; border-color: #dc2626; color: white; }
 .confirmation-dialog .confirmation-destructive:not(:disabled):hover { background: #b91c1c; border-color: #b91c1c; box-shadow: 0 4px 12px #dc262624; }
+
+@media(max-width:1024px) { .app-header .mobile-menu-btn { display: inline-flex; padding: 8px; border-radius: 7px; } }
+@media(max-width:768px) { .app-header { padding-inline: 1rem; } .app-header .profile-info { display: none; } .app-header .header-right { gap: 10px; } }

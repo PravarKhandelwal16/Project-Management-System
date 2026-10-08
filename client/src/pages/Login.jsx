@@ -49,7 +49,7 @@ export const Login = () => {
     }
 
     const errors = {};
-    result.error.errors.forEach(err => {
+    result.error.issues.forEach(err => {
       errors[err.path[0]] = err.message;
     });
     setFormErrors(errors);

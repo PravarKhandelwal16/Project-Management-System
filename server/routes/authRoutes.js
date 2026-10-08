@@ -1,3 +1,4 @@
+const {bodyFields}=require('../middleware/inputValidation');
 const express = require('express');
 const router = express.Router();
 const authController = require('../controllers/authController');
@@ -9,14 +10,14 @@ const { authRateLimiter } = require('../middleware/rateLimiter');
  * @desc    Register a new user
  * @access  Public (Rate limited)
  */
-router.post('/register', authRateLimiter, authController.register);
+router.post('/register', authRateLimiter, bodyFields('full_name','email','password'), authController.register);
 
 /**
  * @route   POST /api/auth/login
  * @desc    Authenticate user & return JWT token
  * @access  Public (Rate limited)
  */
-router.post('/login', authRateLimiter, authController.login);
+router.post('/login', authRateLimiter, bodyFields('email','password'), authController.login);
 
 /**
  * @route   POST /api/auth/logout

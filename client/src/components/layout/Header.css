@@ -243,3 +243,6 @@
   background-color: var(--border-color);
   margin: 0.5rem 0;
 }
+
+button.search-result-item { width:100%; text-align:left; border:0; background:transparent; color:inherit; }
+.search-result-item > span { display:block; }

@@ -3,7 +3,7 @@ import React from 'react';
 /**
  * Reusable Status Badge Component
  */
-export const StatusBadge = ({ status, variant = 'status' }) => {
+export const StatusBadge = ({ status, variant: _variant = 'status' }) => {
   const getBadgeClass = () => {
     switch (status?.toLowerCase()) {
       case 'completed':

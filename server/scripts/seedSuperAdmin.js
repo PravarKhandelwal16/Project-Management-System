@@ -1,64 +1,17 @@
-const bcrypt = require('bcrypt');
-const path = require('path');
-require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
-require('dotenv').config({ path: path.resolve(__dirname, '../../.env') });
-const { pool } = require('../config/db');
-const { logAuditEvent } = require('../services/auditService');
-
-const BCRYPT_SALT_ROUNDS = 10;
-
-async function seedSuperAdmin() {
-  const email = (process.env.SUPER_ADMIN_EMAIL || process.argv[2] || 'admin@projectmanagement.com').trim().toLowerCase();
-  const password = process.env.SUPER_ADMIN_PASSWORD || process.argv[3] || 'SuperAdmin123!';
-  const fullName = process.env.SUPER_ADMIN_NAME || process.argv[4] || 'System Super Admin';
-
-  const connection = await pool.getConnection();
-  try {
-    console.log(`[Seed] Checking for Super Admin account: ${email}`);
-
-    const [existing] = await connection.execute(
-      'SELECT id, email, role, is_active FROM users WHERE email = ? LIMIT 1',
-      [email]
-    );
-
-    if (existing.length > 0) {
-      const user = existing[0];
-      await connection.execute(
-        'UPDATE users SET role = "super_admin", is_active = 1 WHERE id = ?',
-        [user.id]
-      );
-      console.log(`[Seed] User ${email} (ID: ${user.id}) successfully elevated to 'super_admin' and set active.`);
-
-      await logAuditEvent({
-        userId: user.id,
-        action: 'SUPER_ADMIN_SEEDED',
-        resourceType: 'USER',
-        resourceId: user.id,
-        details: { action: 'elevated', email },
-      });
-    } else {
-      const passwordHash = await bcrypt.hash(password, BCRYPT_SALT_ROUNDS);
-      const [result] = await connection.execute(
-        'INSERT INTO users (full_name, email, password_hash, role, is_active) VALUES (?, ?, ?, "super_admin", 1)',
-        [fullName, email, passwordHash]
-      );
-      console.log(`[Seed] Super Admin created successfully! ID: ${result.insertId}, Email: ${email}`);
-
-      await logAuditEvent({
-        userId: result.insertId,
-        action: 'SUPER_ADMIN_SEEDED',
-        resourceType: 'USER',
-        resourceId: result.insertId,
-        details: { action: 'created', email, full_name: fullName },
-      });
-    }
-  } catch (error) {
-    console.error('[Seed Error] Failed to seed Super Admin:', error);
-    process.exitCode = 1;
-  } finally {
-    connection.release();
-    await pool.end();
-  }
+require('../config/env');
+const bcrypt=require('bcrypt'),{pool}=require('../config/db'),{validateRegisterInput}=require('../utils/validation'),{createAuditLog}=require('../models/auditModel');
+async function bootstrap(){
+  const data={email:process.env.SUPER_ADMIN_EMAIL,full_name:process.env.SUPER_ADMIN_NAME,password:process.env.SUPER_ADMIN_PASSWORD};
+  const validation=validateRegisterInput(data);if(!validation.isValid)throw new Error('Supply valid SUPER_ADMIN_EMAIL, SUPER_ADMIN_NAME and SUPER_ADMIN_PASSWORD through environment variables');
+  const connection=await pool.getConnection();
+  try{
+    await connection.beginTransaction();
+    const [existing]=await connection.query("SELECT id FROM users WHERE role='super_admin' FOR UPDATE");
+    if(existing.length)throw new Error('A Super Admin already exists; bootstrap never elevates or overwrites accounts');
+    const [insert]=await connection.execute("INSERT INTO users (full_name,email,password_hash,role) VALUES (?,?,?,'super_admin')",[data.full_name.trim(),data.email.trim().toLowerCase(),await bcrypt.hash(data.password,12)]);
+    await createAuditLog({userId:insert.insertId,action:'SUPER_ADMIN_BOOTSTRAPPED',resourceType:'USER',resourceId:insert.insertId,actor:data,details:{email:data.email}},connection);
+    await connection.commit();console.log('Super Admin created. Remove bootstrap credentials from the environment.');
+  }catch(error){await connection.rollback();throw error;}finally{connection.release();}
 }
-
-seedSuperAdmin();
+if(require.main===module)bootstrap().catch(error=>{console.error(require('../utils/logger').errorCode(error));process.exitCode=1;}).finally(()=>pool.end());
+module.exports={bootstrap};

@@ -13,4 +13,8 @@ router.get('/health', (req, res) => {
   });
 });
 
+router.get('/ready', async (req,res) => {
+  try { await require('../config/db').pool.query('SELECT 1'); res.json({success:true,message:'API and database are ready'}); }
+  catch { res.status(503).json({success:false,message:'Service temporarily unavailable'}); }
+});
 module.exports = router;

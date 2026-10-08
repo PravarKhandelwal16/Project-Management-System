@@ -43,7 +43,7 @@ export const Register = () => {
     const errors = {};
 
     if (!result.success) {
-      result.error.errors.forEach(err => {
+      result.error.issues.forEach(err => {
         const path = err.path[0];
         if (path === 'full_name') errors.fullName = err.message;
         else errors[path] = err.message;

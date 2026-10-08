@@ -1,6 +1,6 @@
 import accessCatalog from '@shared/access.json';
 import { useState, useRef, useEffect } from 'react';
-import { Menu, Search, Bell, Sun, User as UserIcon, LogOut, Settings } from 'lucide-react';
+import { Menu, Search, Sun, User as UserIcon, LogOut, Settings } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import api from '../../services/api';
@@ -31,18 +31,6 @@ const Header = ({ toggleSidebar }) => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  useEffect(() => {
-    const delayDebounceFn = setTimeout(() => {
-      if (searchQuery.trim().length > 0) {
-        performSearch(searchQuery);
-      } else {
-        setSearchResults(null);
-      }
-    }, 300);
-
-    return () => clearTimeout(delayDebounceFn);
-  }, [searchQuery]);
-
   const performSearch = async (query) => {
     setIsSearching(true);
     try {
@@ -54,6 +42,18 @@ const Header = ({ toggleSidebar }) => {
       setIsSearching(false);
     }
   };
+
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(() => {
+      if (searchQuery.trim().length > 0) {
+        performSearch(searchQuery);
+      } else {
+        setSearchResults(null);
+      }
+    }, 300);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [searchQuery]);
 
   const navigateToResult = (type, id) => {
     setSearchResults(null);
@@ -76,7 +76,7 @@ const Header = ({ toggleSidebar }) => {
   return (
     <header className="app-header">
       <div className="header-left">
-        <button className="mobile-menu-btn" onClick={toggleSidebar}>
+        <button className="mobile-menu-btn" aria-label="Open navigation" onClick={toggleSidebar}>
           <Menu size={20} />
         </button>
         
@@ -86,7 +86,7 @@ const Header = ({ toggleSidebar }) => {
             <input 
               type="text" 
               placeholder="Search projects, tasks..." 
-              className="search-input"
+              className="search-input" aria-label="Search workspace"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               onFocus={() => { if(searchQuery) performSearch(searchQuery); }}
@@ -101,10 +101,10 @@ const Header = ({ toggleSidebar }) => {
                 <div className="search-category">
                   <div className="search-category-title">Projects</div>
                   {searchResults.projects.map(p => (
-                    <div key={`p-${p.id}`} className="search-result-item" onClick={() => navigateToResult('project', p.id)}>
-                      <div className="search-result-name">{p.name}</div>
-                      <div className="search-result-meta">{p.status}</div>
-                    </div>
+                    <button type="button" key={`p-${p.id}`} className="search-result-item" onClick={() => navigateToResult('project', p.id)}>
+                      <span className="search-result-name">{p.name}</span>
+                      <span className="search-result-meta">{p.status}</span>
+                    </button>
                   ))}
                 </div>
               )}
@@ -113,10 +113,10 @@ const Header = ({ toggleSidebar }) => {
                 <div className="search-category">
                   <div className="search-category-title">Tasks</div>
                   {searchResults.tasks.map(t => (
-                    <div key={`t-${t.id}`} className="search-result-item" onClick={() => navigateToResult('task', t.id)}>
-                      <div className="search-result-name">{t.name}</div>
-                      <div className="search-result-meta">{t.project_name} • {t.status}</div>
-                    </div>
+                    <button type="button" key={`t-${t.id}`} className="search-result-item" onClick={() => navigateToResult('task', t.id)}>
+                      <span className="search-result-name">{t.name}</span>
+                      <span className="search-result-meta">{t.project_name} • {t.status}</span>
+                    </button>
                   ))}
                 </div>
               )}
@@ -125,10 +125,10 @@ const Header = ({ toggleSidebar }) => {
                 <div className="search-category">
                   <div className="search-category-title">Users</div>
                   {searchResults.users.map(u => (
-                    <div key={`u-${u.id}`} className="search-result-item" onClick={() => navigateToResult('user', u.id)}>
-                      <div className="search-result-name">{u.name}</div>
-                      <div className="search-result-meta">{formatRole(u.role)}</div>
-                    </div>
+                    <button type="button" key={`u-${u.id}`} className="search-result-item" onClick={() => navigateToResult('user', u.id)}>
+                      <span className="search-result-name">{u.name}</span>
+                      <span className="search-result-meta">{formatRole(u.role)}</span>
+                    </button>
                   ))}
                 </div>
               )}
@@ -142,13 +142,13 @@ const Header = ({ toggleSidebar }) => {
       </div>
 
       <div className="header-right">
-        <button className="header-icon-btn">
+        <button className="header-icon-btn" aria-label="Display appearance" disabled>
           <Sun size={20} />
         </button>
         <NotificationDropdown />
         
         <div className="profile-menu-container">
-          <div 
+          <button type="button" aria-label="Account menu" aria-expanded={showProfileMenu}
             className="profile-trigger" 
             onClick={() => setShowProfileMenu(!showProfileMenu)}
           >
@@ -159,7 +159,7 @@ const Header = ({ toggleSidebar }) => {
               <div className="profile-name">{user?.full_name}</div>
               <div className="profile-role">{formatRole(user?.role)}</div>
             </div>
-          </div>
+          </button>
           
           {showProfileMenu && (
             <div className="profile-dropdown">
@@ -168,10 +168,10 @@ const Header = ({ toggleSidebar }) => {
                 <div className="profile-email">{user?.email}</div>
               </div>
               <div className="profile-dropdown-body">
-                <button className="dropdown-item">
+                <button className="dropdown-item" disabled>
                   <UserIcon size={16} /> Profile
                 </button>
-                <button className="dropdown-item">
+                <button className="dropdown-item" onClick={()=>{setShowProfileMenu(false);navigate('/settings');}}>
                   <Settings size={16} /> Settings
                 </button>
                 <div className="dropdown-divider"></div>

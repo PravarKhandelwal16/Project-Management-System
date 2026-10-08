@@ -9,7 +9,7 @@ export const updatePreferencesSchema = z.object({
   web_overdue: z.boolean().optional(),
   browser_task_assigned: z.boolean().optional(),
   browser_due_tomorrow: z.boolean().optional()
-});
+}).strict();
 
 export default {
   updatePreferencesSchema

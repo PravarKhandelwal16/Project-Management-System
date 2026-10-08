@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { 
-  getNotificationsApi, 
+import {
+  getNotificationsApi,
   getUnreadNotificationCountApi,
   markNotificationReadApi,
   markAllNotificationsReadApi
@@ -22,7 +22,7 @@ const NotificationDropdown = () => {
         getUnreadNotificationCountApi(),
         getNotificationsApi({ limit: 5 })
       ]);
-      
+
       if (countRes.success) setUnreadCount(countRes.data.count);
       if (notifRes.success) setNotifications(notifRes.data);
     } catch (err) {
@@ -32,7 +32,7 @@ const NotificationDropdown = () => {
 
   useEffect(() => {
     fetchNotifications();
-    
+
     // Simple polling every 60 seconds
     const intervalId = setInterval(fetchNotifications, 60000);
     return () => clearInterval(intervalId);
@@ -61,12 +61,12 @@ const NotificationDropdown = () => {
 
   const handleNotificationClick = async (notif) => {
     setIsOpen(false);
-    
+
     if (!notif.is_read) {
       try {
         await markNotificationReadApi(notif.id);
         setUnreadCount(prev => Math.max(0, prev - 1));
-        setNotifications(notifications.map(n => 
+        setNotifications(notifications.map(n =>
           n.id === notif.id ? { ...n, is_read: 1 } : n
         ));
       } catch (err) {
@@ -99,8 +99,8 @@ const NotificationDropdown = () => {
 
   return (
     <div className="header-action-item" ref={dropdownRef}>
-      <button 
-        className="icon-btn" 
+      <button
+        className="icon-btn" aria-label="Notifications" aria-expanded={isOpen}
         onClick={() => setIsOpen(!isOpen)}
         style={{ position: 'relative' }}
       >
@@ -140,21 +140,21 @@ const NotificationDropdown = () => {
           zIndex: 100,
           overflow: 'hidden'
         }}>
-          <div style={{ 
-            display: 'flex', 
-            justifyContent: 'space-between', 
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
             alignItems: 'center',
             padding: '12px 15px',
             borderBottom: '1px solid var(--border-color)'
           }}>
             <h4 style={{ margin: 0, fontSize: '0.9rem', color: 'var(--text-primary)' }}>Notifications</h4>
             {unreadCount > 0 && (
-              <button 
+              <button
                 onClick={handleMarkAllRead}
-                style={{ 
-                  background: 'none', 
-                  border: 'none', 
-                  color: 'var(--accent-primary)', 
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: 'var(--accent-primary)',
                   fontSize: '0.75rem',
                   cursor: 'pointer',
                   display: 'flex',
@@ -166,7 +166,7 @@ const NotificationDropdown = () => {
               </button>
             )}
           </div>
-          
+
           <div style={{ maxHeight: '300px', overflowY: 'auto' }}>
             {notifications.length === 0 ? (
               <div style={{ padding: '20px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
@@ -174,7 +174,7 @@ const NotificationDropdown = () => {
               </div>
             ) : (
               notifications.map(notif => (
-                <div 
+                <div
                   key={notif.id}
                   onClick={() => handleNotificationClick(notif)}
                   style={{
@@ -200,8 +200,8 @@ const NotificationDropdown = () => {
                       {notif.message}
                     </p>
                     <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>
-                      {new Date(notif.created_at).toLocaleString(undefined, { 
-                        month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' 
+                      {new Date(notif.created_at).toLocaleString(undefined, {
+                        month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
                       })}
                     </span>
                   </div>
@@ -209,8 +209,8 @@ const NotificationDropdown = () => {
               ))
             )}
           </div>
-          
-          <div 
+
+          <div
             onClick={() => { setIsOpen(false); navigate('/notifications'); }}
             style={{
               padding: '10px',

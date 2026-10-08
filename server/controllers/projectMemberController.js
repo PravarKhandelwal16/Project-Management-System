@@ -35,7 +35,7 @@ const addMember = async (req, res, next) => {
     const projectId = req.project.id;
     const { user_id } = req.body;
 
-    if (!Number.isSafeInteger(Number(user_id)) || Number(user_id) < 1) {
+    if (!require('../middleware/inputValidation').validateIdentifier(user_id)) {
       return res.status(400).json({
         success: false,
         message: 'Valid user ID is required',

@@ -1,4 +1,4 @@
-require('dotenv').config();
+require('../config/env');
 const emailService = require('../services/emailService');
 
 const main = async () => {
@@ -16,7 +16,7 @@ const main = async () => {
     console.log('Test email sent successfully.');
     process.exit(0);
   } catch (err) {
-    console.error('Error sending test email:', err);
+    require('../utils/logger').error('manual_email_test_failed',{code:require('../utils/logger').errorCode(err)});
     process.exit(1);
   }
 };

@@ -23,7 +23,9 @@ const updatePreferences = async (userId, data) => {
   await ensurePreferences(userId);
   const updates = [];
   const params = [];
+  const allowed=['email_task_assigned','email_due_tomorrow','email_overdue','web_task_assigned','web_due_tomorrow','web_overdue','browser_task_assigned','browser_due_tomorrow'];
   for (const [key, value] of Object.entries(data)) {
+    if(!allowed.includes(key)||typeof value!=='boolean')throw Object.assign(new Error('Invalid notification preference.'),{statusCode:400});
     updates.push(`${key} = ?`);
     params.push(value);
   }
@@ -90,10 +92,10 @@ const notifyTaskAssigned = async (task, project, user, isReassigned = false) => 
   const prefs = await ensurePreferences(user.id);
   if (prefs.email_task_assigned) {
     try {
-      await emailService.sendTaskAssignedEmail(user, task, project);
-      await logNotification(user.id, task.id, type, NOTIFICATION_CHANNEL.EMAIL, NOTIFICATION_STATUS.SENT);
+      const result=await emailService.sendTaskAssignedEmail(user, task, project);
+      await logNotification(user.id, task.id, type, NOTIFICATION_CHANNEL.EMAIL, result.skipped?'SKIPPED':NOTIFICATION_STATUS.SENT);
     } catch (err) {
-      await logNotification(user.id, task.id, type, NOTIFICATION_CHANNEL.EMAIL, NOTIFICATION_STATUS.FAILED, err.message);
+      await logNotification(user.id, task.id, type, NOTIFICATION_CHANNEL.EMAIL, NOTIFICATION_STATUS.FAILED, require('../utils/logger').errorCode(err));
     }
   }
 };
@@ -118,10 +120,11 @@ const getUnreadCount = async (userId) => {
 };
 
 const markAsRead = async (userId, notificationId) => {
-  await pool.query(
+  const [result] = await pool.query(
     'UPDATE notifications SET is_read = TRUE, read_at = CURRENT_TIMESTAMP WHERE id = ? AND user_id = ?',
     [notificationId, userId]
   );
+  return result.affectedRows > 0;
 };
 
 const markAllAsRead = async (userId) => {

@@ -1,5 +1,5 @@
 import Skeleton from '../components/Skeleton';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { getNotificationPreferencesApi, updateNotificationPreferencesApi } from '../services/api';
 import './Dashboard.css';
 
@@ -12,22 +12,23 @@ const Settings = () => {
     typeof window !== 'undefined' && 'Notification' in window ? Notification.permission : 'default'
   );
 
-  useEffect(() => {
-    fetchPreferences();
-  }, []);
-
-  const fetchPreferences = async () => {
+  const fetchPreferences = useCallback(async () => {
+    setLoading(true);setMessage({type:'',text:''});
     try {
       const res = await getNotificationPreferencesApi();
       if (res.success) {
         setPreferences(res.data);
       }
     } catch (err) {
-      console.error(err);
+      setMessage({type:'error',text:err.message||'Could not load settings.'});
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    Promise.resolve().then(fetchPreferences);
+  }, [fetchPreferences]);
 
   const handleToggle = (key) => {
     setPreferences({
@@ -55,7 +56,7 @@ const Settings = () => {
         setMessage({ type: 'success', text: 'Preferences saved successfully' });
       }
     } catch (err) {
-      setMessage({ type: 'error', text: 'Failed to save preferences' });
+      setMessage({ type: 'error', text: err.message || 'Failed to save preferences' });
     } finally {
       setSaving(false);
     }
@@ -63,7 +64,7 @@ const Settings = () => {
 
   const requestBrowserPermission = async () => {
     if (!('Notification' in window)) {
-      alert('This browser does not support desktop notification');
+      setMessage({type:'error',text:'This browser does not support desktop notifications.'});
       return;
     }
     
@@ -76,7 +77,7 @@ const Settings = () => {
   };
 
   if (loading) return <Skeleton label="Loading settings"/>;
-  if (!preferences) return null;
+  if (!preferences) return <div className="planning-state" role="alert"><h1>Could not load settings</h1><p>{message.text}</p><button className="management-button" onClick={fetchPreferences}>Try again</button></div>;
 
   return (
     <div className="page-container">

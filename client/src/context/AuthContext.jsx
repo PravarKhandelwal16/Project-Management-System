@@ -35,6 +35,12 @@ export const AuthProvider = ({ children }) => {
     }
   }, []);
 
+  useEffect(() => {
+    const expired=()=>logout({sessionExpired:true});
+    window.addEventListener('pms:session-expired',expired);
+    return()=>window.removeEventListener('pms:session-expired',expired);
+  },[logout]);
+
   /**
    * Refresh current user details from backend
    */
