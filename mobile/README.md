@@ -69,7 +69,7 @@ Bottom tabs: **Dashboard, Projects, Tasks, Notifications, More**. Stack screens 
 - Analytics: scoped status/priority/project distributions, completion and weekly activity. Period selection applies to recorded activity, while current status counts remain current totals.
 - Team: project selection, roster, assigned/completed/open workload, email compose via the device mail app, candidate search and guarded add/remove membership.
 - More: account and permission-aware tools. Basic native admin supports user search/pagination/details/role changes, versioned role policies and searchable paginated audit details. Advanced profile/individual overrides remain available in the existing web app.
-- Settings: existing email, shared in-app and web-browser preferences. Browser switches are explicitly web-only. Native push delivery is not configured; no push permission is requested.
+- Settings: existing email, shared in-app and web-browser preferences. Browser switches are explicitly web-only. Optional due-tomorrow mobile push has a separate opt-in control. It requires a development build/APK and Firebase/EAS setup; Expo Go displays a setup message. See [push setup](../docs/MOBILE_PUSH.md).
 
 All eight existing roles are supported: super_admin, admin, portfolio_manager, project_manager, project_coordinator, team_lead, member and viewer. UI actions use `/auth/me` effective permissions; admin screens also require admin/super_admin. Members can change status only on their own assignments. Express still checks resource scope and protected grants for every request.
 

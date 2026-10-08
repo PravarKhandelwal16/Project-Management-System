@@ -4,6 +4,7 @@ import { render, fireEvent, waitFor, act } from "@testing-library/react-native";
 import { jest, test, expect, beforeEach } from "@jest/globals";
 import * as SecureStore from "expo-secure-store";
 import { AuthProvider, useAuth } from "../src/context/AuthContext";
+import { rememberPushToken } from "../src/services/push";
 import { SESSION_EXPIRED } from "../src/services/apiCore";
 const user = {
   id: 1,
@@ -131,5 +132,31 @@ test("offline startup preserves token and waits for a successful retry before un
   fireEvent.press(view.getByText("RETRY"));
   await waitFor(() =>
     expect(view.getByText("signed-in:Team member")).toBeTruthy(),
+  );
+});
+
+test("online logout removes the registered push device using the current JWT", async () => {
+  jest.mocked(SecureStore.getItemAsync).mockResolvedValue("persisted");
+  global.fetch = jest
+    .fn<typeof fetch>()
+    .mockResolvedValue(response(200, { user }));
+  const view = render(
+    <AuthProvider>
+      <Probe />
+    </AuthProvider>,
+  );
+  await waitFor(() =>
+    expect(view.getByText("signed-in:Team member")).toBeTruthy(),
+  );
+  await rememberPushToken("ExpoPushToken[device]");
+  fireEvent.press(view.getByText("LOGOUT"));
+  await waitFor(() => expect(view.getByText("signed-out")).toBeTruthy());
+  expect(global.fetch).toHaveBeenCalledWith(
+    expect.stringContaining("/notifications/push-devices"),
+    expect.objectContaining({
+      method: "DELETE",
+      body: JSON.stringify({ token: "ExpoPushToken[device]" }),
+      headers: expect.objectContaining({ Authorization: "Bearer persisted" }),
+    }),
   );
 });

@@ -29,3 +29,11 @@ Official guidance: [Expo push setup](https://docs.expo.dev/push-notifications/pu
 `npm --prefix server test` includes real guarded MySQL integration coverage for authenticated/strict registration, owner deletion/account rebinding, opt-in, incomplete/tomorrow/access checks, stale-device expiry, overlapping worker deduplication, failures, receipt transitions and invalid-token cleanup. Expo HTTP is mocked, so automated tests never send a real push. `npm --prefix mobile test` covers Go/missing-project/permission conditions, channel/token registration, SecureStore lifecycle and recipient-safe tap targets. TypeScript, Expo Doctor and Android production export check build compatibility.
 
 For a real-device acceptance test, configure the above credentials, assign an accessible incomplete task due tomorrow, enable push, background the native app and wait for REMINDER_CRON. In a development database only, `npm --prefix server run test:reminders` runs the existing daily job immediately. Verify one alert, tap navigation and no duplicate on rerun; complete another task or disable the preference and verify suppression. This script may send real configured email/push, so use demo accounts/dev credentials. Test offline sign-out, account switching, revoked OS permission and invalid-device receipts as well. Actual device delivery requires the deployment credentials and has not been claimed by mock tests.
+
+## Verification record (2026-10-08)
+
+- 54 backend tests passed, including four real MySQL push integration tests. Same-token deletion/re-registration was checked for daily deduplication.
+- 44 mobile tests passed across nine suites, including explicit enable/disable, provider failure, recipient-safe tap targets, delayed account-switch registration and authenticated logout deregistration.
+- TypeScript passed; Expo Doctor passed 21/21; Android Hermes export and existing Vite production build passed.
+- Additive push migration applied successfully to the local configured database. PUSH_ENABLED remains false until deployment credentials are configured.
+- No real push, signed APK, Firebase/EAS account modification or physical-device remote delivery was performed. Provider requests were mocked in tests; export is not an APK.

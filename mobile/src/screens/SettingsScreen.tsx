@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Switch, View } from "react-native";
+import { usePush } from "../context/PushContext";
 import { useAuth } from "../context/AuthContext";
 import { useData } from "../hooks/useData";
 import { roleLabel, updatePreferencesSchema } from "../shared";
@@ -25,6 +26,7 @@ const preferences = [
   ["Web browser only", "browser_due_tomorrow", "Due tomorrow"],
 ];
 export function SettingsScreen() {
+  const push = usePush();
   const { user, api } = useAuth(),
     existing = useData("/notifications/preferences"),
     [values, setValues] = useState<Record<string, boolean>>({}),
@@ -98,10 +100,45 @@ export function SettingsScreen() {
             <Card>
               <Txt heading>Mobile push notifications</Txt>
               <Txt muted>
-                Push delivery is not configured. Your existing in-app inbox
-                refreshes while the app is active. Email reminders continue to
-                use the backend scheduler.
+                Receive a push reminder for your incomplete tasks due tomorrow,
+                even when the app is closed. Reminders use the server's
+                scheduled time and timezone. A development build or APK is
+                required.
               </Txt>
+              <Txt>
+                Due tomorrow:{" "}
+                {existing.data.push_due_tomorrow ? "Enabled" : "Disabled"}
+              </Txt>
+              {push.error && <ErrorBox message={push.error} />}
+              <Button
+                title={
+                  existing.data.push_due_tomorrow
+                    ? "Disable push reminders"
+                    : "Enable push reminders"
+                }
+                busy={push.busy}
+                onPress={async () => {
+                  try {
+                    await (existing.data.push_due_tomorrow
+                      ? push.disable()
+                      : push.enable());
+                    await existing.refresh();
+                  } catch {}
+                }}
+              />
+              {Boolean(existing.data.push_due_tomorrow) && (
+                <Button
+                  title="Register this device"
+                  variant="secondary"
+                  busy={push.busy}
+                  onPress={async () => {
+                    try {
+                      await push.enable();
+                      await existing.refresh();
+                    } catch {}
+                  }}
+                />
+              )}
             </Card>
             {saved && (
               <Txt style={{ color: c.green }} accessibilityRole="alert">

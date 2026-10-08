@@ -39,3 +39,8 @@ yarn-error.*
 # generated native folders
 /ios
 /android
+
+# Firebase/EAS service credentials and local build configuration
+credentials/
+google-services.json
+*service-account*.json

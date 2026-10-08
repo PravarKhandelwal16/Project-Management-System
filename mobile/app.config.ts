@@ -17,6 +17,9 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     ios: { supportsTablet: true, bundleIdentifier: "com.projectmaster.mobile" },
     android: {
       package: "com.projectmaster.mobile",
+      ...(process.env.GOOGLE_SERVICES_JSON
+        ? { googleServicesFile: process.env.GOOGLE_SERVICES_JSON }
+        : {}),
       adaptiveIcon: {
         foregroundImage: "./assets/adaptive-icon.png",
         backgroundColor: "#0B1120",
@@ -24,6 +27,10 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     },
     plugins: [
       "expo-secure-store",
+      [
+        "expo-notifications",
+        { defaultChannel: "task-reminders", color: "#3B82F6" },
+      ],
       "expo-font",
       "@react-native-community/datetimepicker",
       [

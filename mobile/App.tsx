@@ -7,6 +7,7 @@ import { PlusJakartaSans_500Medium } from "@expo-google-fonts/plus-jakarta-sans/
 import { PlusJakartaSans_700Bold } from "@expo-google-fonts/plus-jakarta-sans/700Bold";
 import { AuthProvider } from "./src/context/AuthContext";
 import { NotificationProvider } from "./src/context/NotificationContext";
+import { PushProvider } from "./src/context/PushContext";
 import { AppNavigator } from "./src/navigation/AppNavigator";
 import { Page, Skeleton, ErrorBox } from "./src/components/UI";
 class AppErrorBoundary extends Component<
@@ -50,7 +51,9 @@ export default function App() {
         ) : (
           <AuthProvider>
             <NotificationProvider>
-              <AppNavigator />
+              <PushProvider>
+                <AppNavigator />
+              </PushProvider>
             </NotificationProvider>
           </AuthProvider>
         )}

@@ -1,7 +1,8 @@
 import { SafeAreaView } from "react-native-safe-area-context";
-import React, { useCallback } from "react";
+import React, { useCallback, useEffect } from "react";
 import {
   NavigationContainer,
+  createNavigationContainerRef,
   DarkTheme,
   useFocusEffect,
 } from "@react-navigation/native";
@@ -14,6 +15,7 @@ import {
   Bell,
   Ellipsis,
 } from "lucide-react-native";
+import { usePush } from "../context/PushContext";
 import { useAuth } from "../context/AuthContext";
 import { useNotifications } from "../context/NotificationContext";
 import { can, canAdmin } from "../services/permissions";
@@ -140,8 +142,22 @@ function HomeTabs() {
     </SafeAreaView>
   );
 }
+const navigationRef = createNavigationContainerRef<RootParams>();
 export function AppNavigator() {
   const auth = useAuth();
+  const push = usePush();
+  const openPush = () => {
+    if (
+      auth.user &&
+      push.target &&
+      push.target.userId === auth.user.id &&
+      navigationRef.isReady()
+    ) {
+      navigationRef.navigate("TaskDetails", { id: push.target.taskId });
+      push.consumed();
+    }
+  };
+  useEffect(openPush, [auth.user?.id, push.target]);
   if (auth.initializing)
     return (
       <Page>
@@ -203,7 +219,7 @@ export function AppNavigator() {
     ["AuditLogs", AuditLogsScreen, [], "Audit logs", "audit.view", null],
   ] as const;
   return (
-    <NavigationContainer theme={theme}>
+    <NavigationContainer theme={theme} ref={navigationRef} onReady={openPush}>
       {auth.user ? (
         <Stack.Navigator
           key={auth.user.id}

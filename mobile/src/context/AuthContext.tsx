@@ -13,6 +13,7 @@ import {
   validateApiUrl,
   SESSION_EXPIRED,
 } from "../services/apiCore";
+import { peekPushToken, clearPushToken } from "../services/push";
 import { tokenStore } from "../services/tokenStore";
 import type { Envelope, User } from "../types";
 export type Api = <T = any>(
@@ -129,6 +130,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
   const logout = async () => {
     // Clear local access immediately, including when the backend is unreachable.
+    const pushToken = peekPushToken();
+    const removal = pushToken
+      ? api("/notifications/push-devices", {
+          method: "DELETE",
+          body: { token: pushToken },
+        }).catch(() => {})
+      : Promise.resolve();
+    void clearPushToken().catch(() => {});
     const acknowledgement = api("/auth/logout", { method: "POST" }).catch(
       () => {},
     );
@@ -137,7 +146,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(null);
     setNotice("");
     await tokenStore.clear();
-    await acknowledgement;
+    await Promise.all([acknowledgement, removal]);
   };
   return (
     <Context.Provider

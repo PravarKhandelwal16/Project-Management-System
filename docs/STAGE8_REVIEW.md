@@ -1,6 +1,6 @@
 # Stage 8 implementation review
 
-Stage 8 adds an Expo mobile application using the existing backend, database and shared definitions. It does not add new production APIs for mobile, another auth/RBAC system, a mobile database, native push delivery or offline mutation queues. The optional interactive test harness uses the Stage 7 disposable database guard and is test-only.
+The initial Stage 8 implementation adds an Expo mobile application using the existing backend, database and shared definitions. It does not add new production APIs for mobile, another auth/RBAC system, a mobile database, native push delivery or offline mutation queues. The optional interactive test harness uses the Stage 7 disposable database guard and is test-only.
 
 ## Architecture and navigation
 
@@ -87,7 +87,7 @@ Development/test packages:
 - `typescript`: `~6.0.3`
 - `jest-expo`: `~57.0.5`
 
-Native fetch/AbortController is used; Axios is not needed. No AsyncStorage is installed, because no persistent offline cache is included. No Expo Notifications dependency is added without an existing push-delivery backend.
+Native fetch/AbortController is used; Axios is not needed. No AsyncStorage is installed, because no persistent offline cache is included. The initial implementation omitted Expo Notifications; the push follow-up described below adds it with backend delivery support.
 
 ## Complete file inventory
 
@@ -194,3 +194,9 @@ The native Team Member walkthrough also verified the assignment inbox, related-t
 Final TypeScript, mobile test/coverage and Android export passed after the native date callback update. Expo Doctor remains 21/21. Backend 50/50 and browser 15/15 passed after the compatible API extension. Core services are 96.29% covered by lines; complete measured core percentage is shown above. Native rendering uncovered whitespace nodes that mocked JS renderers accepted; an AST regression test now rejects them. The installed date-picker's deprecated onChange was replaced with documented onValueChange/onDismiss callbacks and a date/dismissal test.
 
 Distribution is prepared, not published. Physical-device, full signed-APK and iOS checklists remain for the deployment operator. All eight roles have automated transport/authorization coverage; the native walkthrough is not a claim that every checklist row was manually exercised.
+
+## Follow-up: due-tomorrow mobile push
+
+The subsequent mobile push feature adds Expo Notifications/Device/Constants packages, authenticated device registration, a default-off push_due_tomorrow preference, an additive migration, per-device daily deduplication and Expo ticket/receipt handling. It extends the existing scheduler, not a separate backend/database. Settings enables permissions explicitly; refresh and online logout handle registration lifecycle. Notification taps open an authorized task for the current recipient. See [MOBILE_PUSH.md](MOBILE_PUSH.md) for exact setup, tests and delivery limitations. Earlier native test evidence above predates remote push; no real push delivery is claimed without deployment credentials.
+
+Push follow-up verification: backend 54/54, mobile 44/44 across nine suites, TypeScript, Expo Doctor 21/21, Android Hermes export and web production build all pass. New mobile files are src/context/PushContext.tsx, src/services/push.ts, tests/push.test.ts and tests/push-context.test.tsx. New backend files are services/mobilePushService.js, scripts/migratePush.js, tests/integration/push.test.js and database/migration_mobile_push.sql; setup is documented in docs/MOBILE_PUSH.md. SecureStore logout, Settings, native config/plugins, navigation, schema validation, API references and migration/test setup are extended. Real push acceptance remains a deployment check, not a result of mocked tests.

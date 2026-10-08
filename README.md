@@ -184,11 +184,11 @@ Copy-Item mobile/.env.example mobile/.env
 npm run dev:mobile
 ```
 
-Use `http://10.0.2.2:5000/api` for the Android emulator, a computer LAN address for a physical phone, or your deployed HTTPS API. Expo Go must match SDK 57. `npm run android:mobile` opens the emulator. JWTs are kept in SecureStore, never AsyncStorage. No second backend or mobile database is created. Changes become visible on refresh or when returning to a screen. Push delivery is not configured; the shared in-app inbox and existing email scheduler work.
+Use `http://10.0.2.2:5000/api` for the Android emulator, a computer LAN address for a physical phone, or your deployed HTTPS API. Expo Go must match SDK 57. `npm run android:mobile` opens the emulator. JWTs are kept in SecureStore, never AsyncStorage. No second backend or mobile database is created. Changes become visible on refresh or when returning to a screen. Optional mobile push reminders for tasks due tomorrow reuse the existing scheduler; see [push setup](docs/MOBILE_PUSH.md). The shared in-app inbox and email notifications continue independently.
 
 ## Future Mobile Support
 
-Stage 8 includes Android distribution profiles and portable iOS source. Physical-device and signed-build review should be completed for each deployment. Offline mutation queues, native push delivery and store publishing remain future work.
+Stage 8 includes Android distribution profiles and portable iOS source. Physical-device and signed-build review should be completed for each deployment. Offline mutation queues and store publishing remain future work. Native push requires Firebase/EAS credentials and a development build or APK.
 
 ## Submission
 
