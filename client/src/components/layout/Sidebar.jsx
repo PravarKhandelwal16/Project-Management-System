@@ -1,0 +1,109 @@
+import { NavLink, useNavigate } from 'react-router-dom';
+import { 
+  LayoutDashboard, 
+  FolderKanban, 
+  CheckSquare, 
+  Calendar, 
+  BarChart2, 
+  Users, 
+  ShieldAlert, 
+  Settings,
+  LogOut,
+  X
+} from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
+import './Layout.css';
+
+const Sidebar = ({ isOpen, toggleSidebar }) => {
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
+
+  const navItems = [
+    { name: 'Dashboard', path: '/dashboard', icon: <LayoutDashboard size={20} />, roles: ['super_admin', 'admin', 'project_manager', 'member'] },
+    { name: 'Projects', path: '/projects', icon: <FolderKanban size={20} />, roles: ['super_admin', 'admin', 'project_manager', 'member'] },
+    { name: 'Tasks', path: '/tasks', icon: <CheckSquare size={20} />, roles: ['super_admin', 'admin', 'project_manager', 'member'] },
+    { name: 'Calendar', path: '/calendar', icon: <Calendar size={20} />, roles: ['super_admin', 'admin', 'project_manager', 'member'] },
+    { name: 'Analytics', path: '/analytics', icon: <BarChart2 size={20} />, roles: ['super_admin', 'admin', 'project_manager'] },
+    { name: 'Team', path: '/team', icon: <Users size={20} />, roles: ['super_admin', 'admin', 'project_manager'] },
+  ];
+
+  const adminItems = [
+    { name: 'User Management', path: '/admin/users', icon: <Users size={20} />, roles: ['super_admin', 'admin'] },
+    { name: 'Audit Logs', path: '/admin/audit-logs', icon: <ShieldAlert size={20} />, roles: ['super_admin', 'admin'] },
+  ];
+
+  const canSee = (roles) => roles.includes(user?.role);
+
+  return (
+    <>
+      <div className={`sidebar-overlay ${isOpen ? 'active' : ''}`} onClick={toggleSidebar}></div>
+      <aside className={`sidebar ${isOpen ? 'open' : ''}`}>
+        <div className="sidebar-header">
+          <div className="sidebar-logo">
+            <div className="logo-icon">PM</div>
+            <span className="logo-text">ProjectMaster</span>
+          </div>
+          <button className="sidebar-close-btn" onClick={toggleSidebar}>
+            <X size={20} />
+          </button>
+        </div>
+
+        <nav className="sidebar-nav">
+          <div className="nav-section">
+            <h3 className="nav-section-title">Main Menu</h3>
+            <ul className="nav-list">
+              {navItems.filter(item => canSee(item.roles)).map(item => (
+                <li key={item.path} className="nav-item">
+                  <NavLink to={item.path} className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+                    {item.icon}
+                    <span>{item.name}</span>
+                  </NavLink>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {(user?.role === 'super_admin' || user?.role === 'admin') && (
+            <div className="nav-section">
+              <h3 className="nav-section-title">Administration</h3>
+              <ul className="nav-list">
+                {adminItems.filter(item => canSee(item.roles)).map(item => (
+                  <li key={item.path} className="nav-item">
+                    <NavLink to={item.path} className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+                      {item.icon}
+                      <span>{item.name}</span>
+                    </NavLink>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </nav>
+
+        <div className="sidebar-footer">
+          <ul className="nav-list">
+            <li className="nav-item">
+              <button className="nav-link" onClick={() => navigate('/settings')}>
+                <Settings size={20} />
+                <span>Settings</span>
+              </button>
+            </li>
+            <li className="nav-item">
+              <button className="nav-link logout-btn" onClick={handleLogout}>
+                <LogOut size={20} />
+                <span>Logout</span>
+              </button>
+            </li>
+          </ul>
+        </div>
+      </aside>
+    </>
+  );
+};
+
+export default Sidebar;
