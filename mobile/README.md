@@ -116,6 +116,22 @@ Install the resulting APK from the EAS build page, then run `npm run start:dev-c
 
 `build:configure` links your Expo account/project and must retain the supplied profiles and config. If EAS adds `extra.eas.projectId` to app.json, app.config preserves it through the config spread. No account IDs or signing keys are committed here.
 
+### Pre-Built Repository APK
+
+A standalone release APK is built and committed directly in the repository at [`mobile/ProjectMaster.apk`](ProjectMaster.apk).
+
+- **File**: `mobile/ProjectMaster.apk`
+- **Package ID**: `com.projectmaster.mobile`
+- **Architecture**: `arm64-v8a` (standard modern 64-bit Android)
+- **Size**: ~34.7 MB
+
+#### Install with ADB:
+```powershell
+adb install -r ProjectMaster.apk
+```
+
+Or copy `ProjectMaster.apk` directly to your phone and install it without needing Expo Go or an EAS build queue.
+
 ## Installable APK and share link
 
 Configure a publicly reachable **HTTPS** API using the existing deployment. Set the public URL in EAS preview, then:

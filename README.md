@@ -186,6 +186,24 @@ npm run dev:mobile
 
 Use `http://10.0.2.2:5000/api` for the Android emulator, a computer LAN address for a physical phone, or your deployed HTTPS API. Expo Go must match SDK 57. `npm run android:mobile` opens the emulator. JWTs are kept in SecureStore, never AsyncStorage. No second backend or mobile database is created. Changes become visible on refresh or when returning to a screen. Optional mobile push reminders for tasks due tomorrow reuse the existing scheduler; see [push setup](docs/MOBILE_PUSH.md). The shared in-app inbox and email notifications continue independently.
 
+### Standalone Android APK
+
+An installable release APK is included directly in the repository:
+- **Binary**: [`mobile/ProjectMaster.apk`](mobile/ProjectMaster.apk)
+- **Package ID**: `com.projectmaster.mobile`
+- **Target Architecture**: `arm64-v8a` (standard 64-bit Android phones)
+- **Size**: ~34.7 MB
+
+#### Installation via ADB:
+```powershell
+adb install -r mobile/ProjectMaster.apk
+```
+
+#### Manual Phone Installation:
+1. Transfer `mobile/ProjectMaster.apk` to your Android phone via USB, cloud storage, or file sharing.
+2. Open the APK on the device and tap **Install** (enable "Install unknown apps" for your file manager if prompted).
+3. The app connects to your configured backend API directly without requiring Expo Go or a running Metro development server.
+
 ## Future Mobile Support
 
 Stage 8 includes Android distribution profiles and portable iOS source. Physical-device and signed-build review should be completed for each deployment. Offline mutation queues and store publishing remain future work. Native push requires Firebase/EAS credentials and a development build or APK.
