@@ -15,7 +15,7 @@ const pool = mysql.createPool({
   timezone: 'Z',
   charset: 'utf8mb4',
   connectTimeout: 10000,
-  ...(process.env.DB_SSL==='true'?{ssl:{rejectUnauthorized:true,...(process.env.DB_SSL_CA?{ca:fs.readFileSync(process.env.DB_SSL_CA)}:{})}}:{}),
+  ...(process.env.DB_SSL==='true'?{ssl:{rejectUnauthorized:true,verifyIdentity:true,...(process.env.DB_SSL_CA?{ca:fs.readFileSync(process.env.DB_SSL_CA)}:{})}}:{}),
 });
 
 pool.on('connection', connection => connection.query("SET time_zone = '+00:00'"));

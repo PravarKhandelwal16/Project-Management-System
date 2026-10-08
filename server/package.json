@@ -16,6 +16,7 @@
     "test:coverage": "c8 node scripts/runTests.js",
     "migrate:release": "node scripts/migrateRelease.js",
     "db:migrate": "node scripts/migrateDatabase.js",
+    "db:check": "node scripts/checkDatabase.js",
     "seed:demo": "node scripts/seedDemo.js",
     "bootstrap:admin": "node scripts/seedSuperAdmin.js",
     "docs:generate": "node scripts/generateApiDocs.js"

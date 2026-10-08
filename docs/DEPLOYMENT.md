@@ -28,6 +28,8 @@ For a managed remote database, set DB_SSL=true and, where needed, DB_SSL_CA to t
 
 ## Manual deployment
 
+For a fresh Aiven MySQL database and Render backend, follow [Aiven/Render setup](AIVEN_RENDER.md) and [the database settings template](../deployment/aiven.env.example). `npm --prefix server run db:check` verifies connectivity/TLS before schema creation.
+
 1. Install root/server dependencies with npm ci and npm ci --omit=dev --prefix server.
 2. Supply server/.env or process environment through your host's secret configuration.
 3. Migrate with migration credentials; bootstrap the first Super Admin once with SUPER_ADMIN_EMAIL/NAME/PASSWORD and npm --prefix server run bootstrap:admin. Remove those credentials afterwards.

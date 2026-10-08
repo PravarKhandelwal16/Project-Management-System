@@ -9,6 +9,7 @@ The canonical fresh-install path is `npm --prefix server run db:migrate`. Create
 | 3 | server/scripts/migrateAccess.js | Operational roles, policy versions, profiles, audit snapshots |
 | 4 | server/scripts/migratePlanning.js | Personal reminders/events/colours |
 | 5 | server/scripts/migrateRelease.js | Daily unique delivery keys and useful composite indexes |
+| 6 | server/scripts/migratePush.js / migration_mobile_push.sql | Mobile push preferences, devices and receipts |
 
 The runner removes legacy CREATE DATABASE/USE clauses so setup applies to the configured DB_NAME. All current migrations can rerun; tests check preservation of existing data. MySQL DDL commits implicitly, so a migration is not an all-or-nothing transaction.
 
