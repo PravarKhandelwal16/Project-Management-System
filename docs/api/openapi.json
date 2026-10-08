@@ -3,7 +3,7 @@
   "info": {
     "title": "Project Management System",
     "version": "1.0.0",
-    "description": "Stage 7 API reference. API.md documents payload rules, examples, queries and dynamic authorization."
+    "description": "Project Management System REST API reference. API.md documents payload rules, examples, queries, mobile push, and dynamic authorization."
   },
   "servers": [
     {
